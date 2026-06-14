@@ -7,7 +7,8 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { SymptomForm } from "@/components/SymptomForm";
 import { t } from "@/lib/i18n";
 import { isEmergency } from "@/lib/emergency";
-import { Heart } from "lucide-react";
+import { triageSymptoms } from "@/lib/clientTriage";
+import { Heart, Map } from "lucide-react";
 
 export default function Home() {
   const { language, setLanguage } = useLanguage();
@@ -15,7 +16,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const translations = t[language];
 
-  const handleSubmit = async (symptoms: string) => {
+  const handleSubmit = (symptoms: string) => {
     // First, check for emergency keywords client-side
     if (isEmergency(symptoms)) {
       router.push("/emergency");
@@ -25,26 +26,13 @@ export default function Home() {
     // Not an emergency - proceed to triage
     setIsLoading(true);
     try {
-      const response = await fetch("/api/triage", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          symptoms,
-          language,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Store response in sessionStorage to pass to triage page
-        sessionStorage.setItem("triageResult", JSON.stringify(data));
-        sessionStorage.setItem("userSymptoms", symptoms);
-        router.push("/triage");
-      } else {
-        alert(translations.errorMessage);
-      }
+      // Run client-side triage
+      const triageResult = triageSymptoms(symptoms, language);
+      
+      // Store response in sessionStorage to pass to triage page
+      sessionStorage.setItem("triageResult", JSON.stringify(triageResult));
+      sessionStorage.setItem("userSymptoms", symptoms);
+      router.push("/triage");
     } catch (error) {
       console.error("Error submitting symptoms:", error);
       alert(translations.errorMessage);
@@ -115,6 +103,16 @@ export default function Home() {
             {language === "en"
               ? "📖 First Aid Guide"
               : "📖 Mwongozo wa Msaada wa Kwanza"}
+          </a>
+
+          {/* Maps Button */}
+          <a
+            href="/maps"
+            className="w-full mt-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition-shadow text-center"
+          >
+            {language === "en"
+              ? "🗺️ Hospital Map"
+              : "🗺️ Ramani ya Hospitali"}
           </a>
         </div>
       </div>

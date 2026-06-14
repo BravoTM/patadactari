@@ -7,8 +7,8 @@ import { TriageResponse } from "@/components/TriageResponse";
 import { FacilityCard } from "@/components/FacilityCard";
 import { EmergencyBanner } from "@/components/EmergencyBanner";
 import { t } from "@/lib/i18n";
-import { Facility, formatDistance } from "@/lib/facilities";
-import { Heart, ArrowLeft } from "lucide-react";
+import { Facility, getNearestFacilities, haversineDistance } from "@/lib/facilities";
+import { Heart, ArrowLeft, Map } from "lucide-react";
 
 interface TriageResult {
   guidance: string;
@@ -61,54 +61,21 @@ export default function TriagePage() {
     }
   }, [router]);
 
-  const loadFacilities = async (lat?: number, lng?: number) => {
-    try {
-      const params = new URLSearchParams();
-      if (lat && lng) {
-        params.append("lat", lat.toString());
-        params.append("lng", lng.toString());
-      }
-
-      const response = await fetch(`/api/facilities?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Calculate distances if we have location
-        let facilitiesWithDistance = data.facilities;
-        if (lat && lng) {
-          facilitiesWithDistance = data.facilities.map((f: Facility) => {
-            const distance = calculateDistance(lat, lng, f.latitude, f.longitude);
-            return { ...f, distance };
-          });
-        }
-        
-        setFacilities(facilitiesWithDistance);
-      }
-    } catch (error) {
-      console.error("Error loading facilities:", error);
-    } finally {
-      setIsLoadingFacilities(false);
+  const loadFacilities = (lat?: number, lng?: number) => {
+    // Load facilities directly from utility
+    const facilitiesList = getNearestFacilities(lat, lng);
+    
+    // Calculate distances if we have location
+    let facilitiesWithDistance = facilitiesList;
+    if (lat && lng) {
+      facilitiesWithDistance = facilitiesList.map((f) => ({
+        ...f,
+        distance: haversineDistance(lat, lng, f.latitude, f.longitude),
+      }));
     }
-  };
-
-  // Haversine formula
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+    
+    setFacilities(facilitiesWithDistance);
+    setIsLoadingFacilities(false);
   };
 
   if (!triageResult) {

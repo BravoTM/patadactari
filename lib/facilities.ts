@@ -16,7 +16,7 @@ export interface Facility {
  * Haversine formula to calculate distance between two geographic points
  * Returns distance in kilometers
  */
-function haversineDistance(
+export function haversineDistance(
   lat1: number,
   lon1: number,
   lat2: number,

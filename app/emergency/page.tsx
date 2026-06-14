@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageProvider";
 import { FacilityCard } from "@/components/FacilityCard";
 import { t } from "@/lib/i18n";
-import { Facility } from "@/lib/facilities";
-import { Phone, Home } from "lucide-react";
+import { Facility, getNearestEmergencyFacilities, haversineDistance } from "@/lib/facilities";
+import { Phone, Home, Map } from "lucide-react";
 
 export default function EmergencyPage() {
   const { language } = useLanguage();
   const router = useRouter();
   const [facilities, setFacilities] = useState<(Facility & { distance?: number })[]>([]);
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const translations = t[language];
 
   useEffect(() => {
@@ -20,16 +21,33 @@ export default function EmergencyPage() {
     loadEmergencyFacilities();
   }, []);
 
-  const loadEmergencyFacilities = async () => {
-    try {
-      const response = await fetch("/api/facilities?emergency=true");
-      if (response.ok) {
-        const data = await response.json();
-        setFacilities(data.facilities);
-      }
-    } catch (error) {
-      console.error("Error loading facilities:", error);
-    } finally {
+  const loadEmergencyFacilities = () => {
+    setIsLoadingFacilities(true);
+    // Try to get user's location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          const facilitiesList = getNearestEmergencyFacilities(latitude, longitude);
+          const withDistance = facilitiesList.map((f) => ({
+            ...f,
+            distance: haversineDistance(latitude, longitude, f.latitude, f.longitude),
+          }));
+          setFacilities(withDistance);
+          setIsLoadingFacilities(false);
+        },
+        () => {
+          // Location permission denied - load default facilities
+          const facilitiesList = getNearestEmergencyFacilities();
+          setFacilities(facilitiesList);
+          setIsLoadingFacilities(false);
+        }
+      );
+    } else {
+      // Geolocation not supported
+      const facilitiesList = getNearestEmergencyFacilities();
+      setFacilities(facilitiesList);
       setIsLoadingFacilities(false);
     }
   };
