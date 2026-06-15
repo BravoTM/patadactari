@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  phoneNumber String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  triageSessions TriageSession[]
+  auditLogs      AuditLog[]
+
+  @@map("users")
+}
+
+model TriageSession {
+  id                   String   @id @default(cuid())
+  userId               String?
+  user                 User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  symptoms             String[]
+  severityLevel        String   // 'self_care', 'clinic', 'emergency'
+  recommendedFacilityId String?
+  aiGuidance           String?
+  language             String   @default("en") // 'en', 'sw'
+  createdAt            DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("triage_sessions")
+}
+
+model Facility {
+  id                String   @id
+  name              String
+  city              String?
+  level             Int?     // Kenya system: 3, 4, 5, 6
+  address           String?
+  latitude          Decimal? @db.Decimal(10, 8)
+  longitude         Decimal? @db.Decimal(11, 8)
+  phone             String?
+  hours             String?
+  emergencyCapable  Boolean  @default(false)
+  specialties       String[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([city])
+  @@index([emergencyCapable])
+  @@map("facilities")
+}
+
+model EmbeddingsCache {
+  id            String   @id @default(cuid())
+  contentHash   String   @unique
+  embedding     String   // Store as JSON string
+  source        String   // 'guideline', 'facility', etc.
+  createdAt     DateTime @default(now())
+
+  @@map("embeddings_cache")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
