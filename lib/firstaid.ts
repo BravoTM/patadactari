@@ -16,6 +16,332 @@ export interface FirstAidGuide {
   emergencyKeywords: string[];
 }
 
+export interface Disease {
+  id: string;
+  nameEn: string;
+  nameSw: string;
+  descriptionEn: string;
+  descriptionSw: string;
+  symptoms: string[]; // lowercase keywords to match against
+  commonSymptoms: string[];
+  severity: "low" | "medium" | "high" | "critical";
+  recommendations: string[];
+  whenToSeekHelp: string[];
+}
+
+export const DISEASES_DATABASE: Disease[] = [
+  {
+    id: "flu",
+    nameEn: "Influenza (Flu)",
+    nameSw: "Mafua (Flu)",
+    descriptionEn: "Viral respiratory infection causing fever, body aches, and fatigue",
+    descriptionSw: "Maambukizo ya kuvimba vya kupumzika yanayosababisha homa, maumivu ya mwili",
+    symptoms: ["fever", "cough", "body aches", "fatigue", "headache", "chills", "homa", "kikohozi", "maumivu"],
+    commonSymptoms: ["High fever (39-40°C)", "Dry cough", "Severe body aches", "Fatigue", "Headache", "Chills"],
+    severity: "medium",
+    recommendations: [
+      "Rest and get plenty of sleep",
+      "Stay hydrated - drink water, warm tea",
+      "Gargle with salt water for sore throat",
+      "Use warm compress for body aches",
+      "Eat nutritious foods when able",
+    ],
+    whenToSeekHelp: [
+      "Fever persists more than 5-7 days",
+      "Difficulty breathing",
+      "Chest pain",
+      "Confusion or severe weakness",
+      "If high-risk (elderly, pregnant, chronic illness)",
+    ],
+  },
+  {
+    id: "common_cold",
+    nameEn: "Common Cold",
+    nameSw: "Baridi ya Kawaida",
+    descriptionEn: "Mild viral infection with runny nose, sneezing, cough",
+    descriptionSw: "Maambukizo dogo ya kuvimba na kufua maji, kunechemea, kikohozi",
+    symptoms: ["runny nose", "sneezing", "cough", "sore throat", "mild fever", "congestion", "maji", "nechemea"],
+    commonSymptoms: ["Runny or stuffy nose", "Sneezing", "Mild cough", "Sore throat", "Mild fatigue"],
+    severity: "low",
+    recommendations: [
+      "Rest at home",
+      "Drink warm liquids (tea with honey)",
+      "Use saline nasal drops",
+      "Gargle with salt water",
+      "Take vitamin C",
+    ],
+    whenToSeekHelp: [
+      "Symptoms last more than 2 weeks",
+      "High fever (over 39°C)",
+      "Difficulty breathing",
+      "Severe headache",
+    ],
+  },
+  {
+    id: "malaria",
+    nameEn: "Malaria",
+    nameSw: "Malaria",
+    descriptionEn: "Parasitic disease transmitted by mosquitoes causing fever cycles",
+    descriptionSw: "Ugonjwa wa parasite uliotumwa na mbu unasababisha mzunguko wa homa",
+    symptoms: ["fever", "chills", "sweating", "headache", "malaria", "cycles", "mzunguko wa homa", "malaria", "kufa"],
+    commonSymptoms: ["Cyclic high fever (comes in waves)", "Severe chills", "Profuse sweating", "Severe headache", "Body aches", "Weakness"],
+    severity: "high",
+    recommendations: [
+      "Seek medical help immediately - requires blood test",
+      "Start antimalarial medication as prescribed",
+      "Stay in bed and rest",
+      "Drink fluids to prevent dehydration",
+      "Use mosquito nets at night",
+    ],
+    whenToSeekHelp: [
+      "Any suspected malaria should be confirmed with blood test",
+      "Fever with chills and sweating",
+      "Confusion or severe weakness",
+      "In endemic areas, always seek testing",
+    ],
+  },
+  {
+    id: "typhoid",
+    nameEn: "Typhoid Fever",
+    nameSw: "Homa ya Typhoid",
+    descriptionEn: "Bacterial infection from contaminated food/water causing prolonged fever",
+    descriptionSw: "Maambukizo ya bacterial kutoka kwa chakula/maji mengine yanayosababisha homa mrefu",
+    symptoms: ["sustained fever", "headache", "weakness", "stomach pain", "typhoid", "diarrhea", "constipation", "rose spots"],
+    commonSymptoms: ["Sustained high fever (gradually increasing)", "Severe headache", "Weakness", "Abdominal pain", "Rash on chest"],
+    severity: "high",
+    recommendations: [
+      "Seek medical evaluation and blood test",
+      "May require hospitalization and antibiotics",
+      "Rest completely in bed",
+      "Drink clean water and oral rehydration solution",
+      "Eat soft, easily digestible foods",
+    ],
+    whenToSeekHelp: [
+      "Fever lasting more than 3-5 days",
+      "Sustained high fever over 39°C",
+      "Severe headache and weakness",
+      "Any abdominal complications",
+      "Contact medical facility immediately",
+    ],
+  },
+  {
+    id: "cholera",
+    nameEn: "Cholera",
+    nameSw: "Cholera",
+    descriptionEn: "Severe diarrheal disease causing rapid dehydration - medical emergency",
+    descriptionSw: "Ugonjwa mkubwa wa kufula unasababisha kufa kwa haraka kwa maji - dharura ya kimatibabu",
+    symptoms: ["watery diarrhea", "vomiting", "cholera", "dehydration", "severe", "cramping", "kufula", "kupumzika"],
+    commonSymptoms: ["Profuse watery diarrhea (rice water stools)", "Severe vomiting", "Rapid dehydration", "Muscle cramps", "Shock"],
+    severity: "critical",
+    recommendations: [
+      "EMERGENCY - Call 999 immediately",
+      "Replace fluids with ORS (Oral Rehydration Solution)",
+      "Do not eat solid food initially",
+      "Seek immediate medical care",
+      "Hospitalization likely needed",
+    ],
+    whenToSeekHelp: [
+      "Any suspected cholera is an emergency",
+      "Severe watery diarrhea requires immediate care",
+      "Signs of severe dehydration",
+      "Call emergency services immediately",
+    ],
+  },
+  {
+    id: "pneumonia",
+    nameEn: "Pneumonia",
+    nameSw: "Pneumonia",
+    descriptionEn: "Lung infection causing cough, chest pain, difficulty breathing",
+    descriptionSw: "Maambukizo ya mapafu yanayosababisha kikohozi, maumivu ya kifua, mgogoro",
+    symptoms: ["cough", "chest pain", "fever", "pneumonia", "difficulty breathing", "breathless", "mgogoro", "mapafu"],
+    commonSymptoms: ["Productive cough (with phlegm)", "Chest pain when breathing", "Fever", "Difficulty breathing", "Shortness of breath"],
+    severity: "high",
+    recommendations: [
+      "Seek medical evaluation",
+      "Get chest X-ray if suspected",
+      "May require antibiotics",
+      "Rest in upright position",
+      "Drink warm liquids",
+      "Use cool mist humidifier",
+    ],
+    whenToSeekHelp: [
+      "Persistent cough with fever",
+      "Chest pain when breathing",
+      "Shortness of breath",
+      "High fever (over 39°C)",
+      "Confusion or severe weakness",
+    ],
+  },
+  {
+    id: "gastroenteritis",
+    nameEn: "Gastroenteritis (Stomach Flu)",
+    nameSw: "Gastroenteritis",
+    descriptionEn: "Viral or bacterial infection causing nausea, vomiting, diarrhea",
+    descriptionSw: "Maambukizo ya viral au bacterial yanayosababisha mbuvu, kupiga, kufula",
+    symptoms: ["nausea", "vomiting", "diarrhea", "stomach pain", "kufula", "mbuvu", "tumboni", "gastro"],
+    commonSymptoms: ["Nausea and vomiting", "Watery diarrhea", "Stomach cramps", "Loss of appetite", "Mild fever"],
+    severity: "medium",
+    recommendations: [
+      "Rest and avoid solid food initially",
+      "Use ORS for rehydration",
+      "Gradually return to bland foods (rice, bread)",
+      "Stay hydrated with small frequent sips",
+      "Avoid dairy and fatty foods",
+    ],
+    whenToSeekHelp: [
+      "Severe dehydration signs (dark urine, dizziness)",
+      "Vomiting lasting more than 2-3 hours",
+      "Bloody stools or vomit",
+      "Severe abdominal pain",
+      "High fever or symptoms in children/elderly",
+    ],
+  },
+  {
+    id: "asthma",
+    nameEn: "Asthma Attack",
+    nameSw: "Mkazo wa Asthma",
+    descriptionEn: "Narrowing of airways causing difficulty breathing - may be emergency",
+    descriptionSw: "Kupungua kwa njia za kupumzika kunasababisha mgogoro - inaweza kuwa dharura",
+    symptoms: ["shortness of breath", "wheezing", "chest tightness", "asthma", "difficulty breathing", "breathless", "mgogoro"],
+    commonSymptoms: ["Difficulty breathing", "Wheezing", "Chest tightness", "Coughing at night", "Fatigue during exertion"],
+    severity: "high",
+    recommendations: [
+      "Use rescue inhaler if available",
+      "Sit upright and try to stay calm",
+      "Breathe slowly and deeply",
+      "Identify and avoid triggers",
+      "Keep rescue inhaler accessible",
+    ],
+    whenToSeekHelp: [
+      "Difficulty speaking full sentences",
+      "Severe shortness of breath",
+      "Blue lips or face",
+      "No improvement after rescue inhaler",
+      "Severe anxiety or panic",
+    ],
+  },
+  {
+    id: "hypertension",
+    nameEn: "High Blood Pressure",
+    nameSw: "Shinikizo la Juu la Damu",
+    descriptionEn: "Elevated blood pressure increasing heart disease and stroke risk",
+    descriptionSw: "Shinikizo lililobadilika la damu linaloongeza hatari ya saratani ya moyo",
+    symptoms: ["high blood pressure", "headache", "dizziness", "chest pain", "shortness of breath", "hypertension"],
+    commonSymptoms: ["Often no symptoms (silent killer)", "Headache", "Dizziness", "Shortness of breath", "Fatigue"],
+    severity: "high",
+    recommendations: [
+      "Get blood pressure checked regularly",
+      "Reduce salt intake",
+      "Exercise regularly (30 mins/day)",
+      "Manage stress",
+      "Take prescribed medications",
+      "Maintain healthy weight",
+    ],
+    whenToSeekHelp: [
+      "Blood pressure consistently above 140/90",
+      "Severe headache with very high BP",
+      "Chest pain",
+      "Severe shortness of breath",
+      "Confusion or vision changes",
+    ],
+  },
+  {
+    id: "diabetes",
+    nameEn: "Diabetes Symptoms",
+    nameSw: "Dalili za Sukari",
+    descriptionEn: "Elevated blood sugar causing increased thirst, urination, fatigue",
+    descriptionSw: "Sukari ya juu ya damu yanasababisha tamaa nyingi, kuburudika nyingi, uchovu",
+    symptoms: ["diabetes", "increased thirst", "frequent urination", "fatigue", "blurred vision", "sore", "sukari"],
+    commonSymptoms: ["Excessive thirst", "Frequent urination", "Fatigue", "Blurred vision", "Slow healing wounds"],
+    severity: "medium",
+    recommendations: [
+      "Get blood sugar tested",
+      "Maintain healthy diet (reduce sugar)",
+      "Exercise regularly",
+      "Maintain healthy weight",
+      "Monitor blood sugar if diabetic",
+      "Take medications as prescribed",
+    ],
+    whenToSeekHelp: [
+      "Persistent excessive thirst and urination",
+      "Unexplained weight loss",
+      "Blurred vision",
+      "Frequent infections",
+      "Get fasting blood sugar test done",
+    ],
+  },
+  {
+    id: "dengue",
+    nameEn: "Dengue Fever",
+    nameSw: "Homa ya Dengue",
+    descriptionEn: "Mosquito-borne viral infection causing high fever and joint pain",
+    descriptionSw: "Maambukizo ya kuvimba yenye juu sana iliyotumwa na mbu inasababisha homa na maumivu ya kiungo",
+    symptoms: ["dengue", "high fever", "joint pain", "rash", "pain behind eyes", "dengue", "mbu", "maumivu"],
+    commonSymptoms: ["Sudden high fever (39-40°C)", "Severe joint and muscle pain", "Rash on body", "Pain behind eyes", "Headache"],
+    severity: "high",
+    recommendations: [
+      "See doctor for confirmation (blood test)",
+      "Rest completely",
+      "Drink plenty of fluids",
+      "Use acetaminophen for pain (not aspirin)",
+      "Use mosquito nets",
+    ],
+    whenToSeekHelp: [
+      "High fever with severe pain",
+      "Any dengue symptoms in endemic areas",
+      "Petechial rash (small red spots)",
+      "Bleeding or severe weakness",
+      "Confusion or severe headache",
+    ],
+  },
+  {
+    id: "migraine",
+    nameEn: "Migraine Headache",
+    nameSw: "Maumivu ya Kichwa (Migraine)",
+    descriptionEn: "Severe one-sided headache with nausea and sensitivity to light",
+    descriptionSw: "Maumivu makubwa ya upande mmoja wa kichwa na mbuvu na kuzuia kwa taa",
+    symptoms: ["migraine", "severe headache", "nausea", "light sensitivity", "visual disturbance", "aura", "kichwa"],
+    commonSymptoms: ["One-sided severe headache", "Nausea and vomiting", "Sensitivity to light and sound", "Visual disturbances", "Numbness"],
+    severity: "medium",
+    recommendations: [
+      "Rest in quiet, dark room",
+      "Apply cold or warm compress",
+      "Stay hydrated",
+      "Take pain relievers (paracetamol/ibuprofen)",
+      "Identify triggers (stress, foods, sleep)",
+    ],
+    whenToSeekHelp: [
+      "Sudden worst headache of your life",
+      "Headache with fever and stiff neck",
+      "Change in migraine pattern",
+      "Headache with vision changes",
+      "Confusion or difficulty speaking",
+    ],
+  },
+];
+
+export function getDiseasesFromSymptoms(symptoms: string): Disease[] {
+  if (!symptoms.trim()) return [];
+  
+  const userSymptoms = symptoms.toLowerCase().split(/[\s,]+/).filter(s => s.length > 2);
+  
+  const matches = DISEASES_DATABASE.map(disease => {
+    const matchCount = userSymptoms.filter(symptom =>
+      disease.symptoms.some(diseaseSymptom =>
+        diseaseSymptom.includes(symptom) || symptom.includes(diseaseSymptom)
+      )
+    ).length;
+    
+    return { disease, matchCount };
+  })
+    .filter(item => item.matchCount > 0)
+    .sort((a, b) => b.matchCount - a.matchCount)
+    .slice(0, 6) // Return top 6 matches
+    .map(item => item.disease);
+  
+  return matches;
+}
+
 export const FIRST_AID_GUIDES: FirstAidGuide[] = [
   {
     id: "cpr",
@@ -720,7 +1046,496 @@ export const FIRST_AID_GUIDES: FirstAidGuide[] = [
       "swelling",
     ],
   },
+  {
+    id: "fainting",
+    nameEn: "Fainting / Loss of Consciousness",
+    nameSw: "Kufa Fahamu / Kupoteza Fahamu",
+    descriptionEn: "Sudden temporary loss of consciousness - requires immediate action",
+    descriptionSw: "Kufa haraka kwa muda sana ya fahamu - inahitaji hatua ya haraka",
+    steps: [
+      {
+        step: 1,
+        title: "Call Emergency",
+        description: "Get medical help immediately",
+        instructions: ["Call 999 immediately if unresponsive"],
+      },
+      {
+        step: 2,
+        title: "Check Responsiveness",
+        description: "Assess level of consciousness",
+        instructions: [
+          "Tap shoulders and shout",
+          "Check if person responds to pain",
+          "Look for signs of life",
+        ],
+      },
+      {
+        step: 3,
+        title: "Recovery Position",
+        description: "Place person safely on side",
+        instructions: [
+          "Roll person onto side",
+          "Head tilted back to keep airway open",
+          "Leg bent for stability",
+          "Arm supporting head",
+        ],
+      },
+      {
+        step: 4,
+        title: "Monitor Breathing",
+        description: "Watch for normal breathing",
+        instructions: [
+          "Watch chest for rising and falling",
+          "Listen for breathing sounds",
+          "Feel for breath on cheek",
+          "If not breathing, begin CPR",
+        ],
+      },
+      {
+        step: 5,
+        title: "Keep Warm",
+        description: "Prevent shock",
+        instructions: [
+          "Cover with blankets",
+          "Keep environment warm",
+          "Do not give anything to eat or drink",
+        ],
+      },
+      {
+        step: 6,
+        title: "Upon Awakening",
+        description: "Reassure and assess",
+        instructions: [
+          "Keep person calm and still",
+          "Do not allow them to stand immediately",
+          "Ask what they remember",
+          "Continue monitoring until medical help arrives",
+        ],
+      },
+    ],
+    emergencyKeywords: ["fainting", "faint", "unconscious", "passed out", "unresponsive"],
+  },
+  {
+    id: "stroke_fast",
+    nameEn: "Stroke - F.A.S.T. Method",
+    nameSw: "Kumfunga Njia za Damu - Mbinu ya F.A.S.T.",
+    descriptionEn: "Recognize and respond to stroke using F.A.S.T. protocol - time critical",
+    descriptionSw: "Tambua na jibu kumfunga njia kwa kutumia mbinu ya F.A.S.T. - muda muhimu",
+    steps: [
+      {
+        step: 1,
+        title: "F - Face Drooping",
+        description: "Check for facial weakness",
+        instructions: [
+          "Ask person to smile",
+          "Look for one side of face drooping",
+          "One side hanging lower than other",
+          "If yes, possible stroke",
+        ],
+      },
+      {
+        step: 2,
+        title: "A - Arm Weakness",
+        description: "Check for arm weakness",
+        instructions: [
+          "Ask person to raise both arms",
+          "Look for arm drift downward",
+          "One arm lower than the other",
+          "If yes, possible stroke",
+        ],
+      },
+      {
+        step: 3,
+        title: "S - Speech Difficulty",
+        description: "Check for speech problems",
+        instructions: [
+          "Ask person to repeat simple sentence",
+          "Listen for slurred speech",
+          "Listen for difficulty finding words",
+          "If yes, possible stroke",
+        ],
+      },
+      {
+        step: 4,
+        title: "T - Time to Call 999",
+        description: "Call emergency immediately",
+        instructions: [
+          "Note time symptoms started",
+          "Call 999 IMMEDIATELY",
+          "Say 'STROKE' to dispatcher",
+          "Time is critical - treatment works if given early",
+        ],
+      },
+      {
+        step: 5,
+        title: "Additional Symptoms",
+        description: "Other stroke warning signs",
+        instructions: [
+          "Numbness on one side",
+          "Vision problems",
+          "Difficulty understanding",
+          "Severe sudden headache",
+          "Loss of balance or coordination",
+        ],
+      },
+      {
+        step: 6,
+        title: "While Waiting",
+        description: "Keep person safe",
+        instructions: [
+          "Do not give food or drink",
+          "Keep person calm and still",
+          "Do not move unless in danger",
+          "Position head elevated if possible",
+          "Be ready for CPR if needed",
+        ],
+      },
+    ],
+    emergencyKeywords: [
+      "stroke",
+      "kumfunga",
+      "drooping face",
+      "slurred speech",
+      "arm weakness",
+      "fast",
+    ],
+  },
+  {
+    id: "heart_attack",
+    nameEn: "Heart Attack",
+    nameSw: "Shambulio la Moyo",
+    descriptionEn: "Recognize and respond to acute myocardial infarction - medical emergency",
+    descriptionSw: "Tambua na jibu shambulio la moyo - dharura ya kimatibabu",
+    steps: [
+      {
+        step: 1,
+        title: "Identify Heart Attack Symptoms",
+        description: "Recognize warning signs",
+        instructions: [
+          "Chest pain or pressure (crushing)",
+          "Pain spreading to arm, neck, jaw",
+          "Shortness of breath",
+          "Nausea or cold sweats",
+          "Lightheadedness or fainting",
+        ],
+      },
+      {
+        step: 2,
+        title: "Call Emergency",
+        description: "Get immediate medical help",
+        instructions: [
+          "Call 999 immediately",
+          "Say 'Heart attack' or 'chest pain'",
+          "Chew aspirin if available and not allergic",
+          "Do not delay",
+        ],
+      },
+      {
+        step: 3,
+        title: "Position Person",
+        description: "Minimize strain on heart",
+        instructions: [
+          "Have person sit down",
+          "Loosen tight clothing",
+          "Lean back or lie with head elevated",
+          "Feet elevated if blood pressure is low",
+        ],
+      },
+      {
+        step: 4,
+        title: "Keep Calm",
+        description: "Reduce anxiety and stress",
+        instructions: [
+          "Reassure person they are getting help",
+          "Stay calm yourself",
+          "Speak in soothing tone",
+          "Minimize activity and movement",
+        ],
+      },
+      {
+        step: 5,
+        title: "Monitor Vitals",
+        description: "Watch for changes",
+        instructions: [
+          "Monitor breathing and consciousness",
+          "Be ready to perform CPR",
+          "If unconscious, use recovery position",
+          "Continue CPR until emergency arrives",
+        ],
+      },
+      {
+        step: 6,
+        title: "Provide Medical Information",
+        description: "Help emergency team",
+        instructions: [
+          "Tell paramedics time pain started",
+          "Provide list of current medications",
+          "Provide medical history",
+          "Stay with person if possible",
+        ],
+      },
+    ],
+    emergencyKeywords: [
+      "heart attack",
+      "chest pain",
+      "shambulio",
+      "myocardial",
+      "crushing pain",
+    ],
+  },
+  {
+    id: "seizures",
+    nameEn: "Seizures / Convulsions",
+    nameSw: "Mzunguko / Mapigano",
+    descriptionEn: "Respond safely to person having a seizure",
+    descriptionSw: "Jibu kwa salama kwa mtu anayelipwa na mzunguko",
+    steps: [
+      {
+        step: 1,
+        title: "Stay Calm",
+        description: "Ensure your safety first",
+        instructions: [
+          "Do not panic",
+          "Do not restrain person",
+          "Move dangerous objects away",
+          "Clear area around person",
+        ],
+      },
+      {
+        step: 2,
+        title: "Protect Head",
+        description: "Prevent head injury",
+        instructions: [
+          "Place pillow under head",
+          "Or use soft object to cushion head",
+          "Do not put anything in mouth",
+          "Keep head turned to side",
+        ],
+      },
+      {
+        step: 3,
+        title: "Move Away Hazards",
+        description: "Prevent injury during seizure",
+        instructions: [
+          "Move person away from stairs",
+          "Move away from fire or sharp objects",
+          "Move away from water",
+          "Keep space clear around person",
+        ],
+      },
+      {
+        step: 4,
+        title: "Time the Seizure",
+        description: "Note duration for medical team",
+        instructions: [
+          "Look at watch or clock",
+          "Note start and end time",
+          "Most seizures last 1-2 minutes",
+          "Seizures lasting over 5 min = emergency",
+        ],
+      },
+      {
+        step: 5,
+        title: "After the Seizure",
+        description: "Recovery period guidance",
+        instructions: [
+          "Keep person on side",
+          "Wipe away saliva/foam if present",
+          "Allow person to rest",
+          "Person may be confused or sleepy",
+          "Stay with person",
+        ],
+      },
+      {
+        step: 6,
+        title: "When to Call 999",
+        description: "Know emergency indicators",
+        instructions: [
+          "Call if first seizure",
+          "Call if seizure lasts over 5 minutes",
+          "Call if multiple seizures in a row",
+          "Call if person doesn't regain consciousness",
+          "Call if person injured during seizure",
+        ],
+      },
+    ],
+    emergencyKeywords: [
+      "seizure",
+      "convulsion",
+      "mapigano",
+      "fit",
+      "epilepsy",
+      "shaking",
+    ],
+  },
+  {
+    id: "eye_injury",
+    nameEn: "Eye Injuries",
+    nameSw: "Maumiko ya Macho",
+    descriptionEn: "Treat chemical, object, or trauma injuries to the eye",
+    descriptionSw: "Tibu ya kemikali, kitu, au maumiko ya trauma kwa jicho",
+    steps: [
+      {
+        step: 1,
+        title: "Chemical in Eye",
+        description: "Flush immediately with water",
+        instructions: [
+          "Rinse immediately with clean water",
+          "Flush for at least 15-20 minutes",
+          "Hold eyelid open while rinsing",
+          "Rinse from inside corner outward",
+        ],
+      },
+      {
+        step: 2,
+        title: "Foreign Object",
+        description: "Remove visible particles carefully",
+        instructions: [
+          "Do not rub eye",
+          "Try to blink and let tears flush it out",
+          "If visible, try to remove with corner of cloth",
+          "If stuck, cover eye and seek help",
+        ],
+      },
+      {
+        step: 3,
+        title: "Blunt Trauma",
+        description: "Apply cold compress",
+        instructions: [
+          "Apply ice pack wrapped in cloth",
+          "Apply for 15 minutes on, 15 minutes off",
+          "Do not apply ice directly to eye",
+          "Do not apply pressure",
+        ],
+      },
+      {
+        step: 4,
+        title: "Penetrating Injury",
+        description: "Protect and seek immediate help",
+        instructions: [
+          "Do not remove object",
+          "Cover eye gently with cup",
+          "Apply sterile gauze around it",
+          "Call 999 immediately",
+          "Keep head still",
+        ],
+      },
+      {
+        step: 5,
+        title: "Serious Symptoms",
+        description: "Recognize when to seek emergency help",
+        instructions: [
+          "Severe pain",
+          "Vision loss or blurred vision",
+          "Blood in eye",
+          "Eye bulging out",
+          "Inability to move eye",
+        ],
+      },
+      {
+        step: 6,
+        title: "General Care",
+        description: "Supportive measures",
+        instructions: [
+          "Do not allow rubbing",
+          "Wear protective eyewear",
+          "Seek medical help for all serious injuries",
+          "See eye doctor as soon as possible",
+        ],
+      },
+    ],
+    emergencyKeywords: [
+      "eye injury",
+      "chemical eye",
+      "eye trauma",
+      "macho",
+      "foreign body",
+    ],
+  },
+  {
+    id: "hypothermia",
+    nameEn: "Hypothermia (Severe Cold)",
+    nameSw: "Kufanya Baridi Sana (Hypothermia)",
+    descriptionEn: "Treat dangerous drop in body temperature",
+    descriptionSw: "Tibu ya kupungua kupiga sana kwa joto la mwili",
+    steps: [
+      {
+        step: 1,
+        title: "Move to Warmth",
+        description: "Get person out of cold",
+        instructions: [
+          "Move indoors immediately",
+          "Remove from wind and moisture",
+          "Handle gently (rough handling dangerous)",
+          "Call emergency if very cold",
+        ],
+      },
+      {
+        step: 2,
+        title: "Remove Wet Clothing",
+        description: "Prevent further heat loss",
+        instructions: [
+          "Remove wet garments",
+          "Replace with dry clothing/blankets",
+          "Do not leave person bare",
+          "Cover head and neck",
+        ],
+      },
+      {
+        step: 3,
+        title: "Rewarm Gradually",
+        description: "Slow passive rewarming",
+        instructions: [
+          "Do not use direct heat",
+          "Do not give hot drinks",
+          "Use blankets and warm (not hot) environment",
+          "Avoid rapid temperature changes",
+        ],
+      },
+      {
+        step: 4,
+        title: "Monitor Vitals",
+        description: "Watch for changes",
+        instructions: [
+          "Check for breathing (may be very slow)",
+          "Feel for pulse (may be faint)",
+          "Monitor consciousness",
+          "Be ready for CPR",
+        ],
+      },
+      {
+        step: 5,
+        title: "Seek Medical Help",
+        description: "Get professional care",
+        instructions: [
+          "Severe hypothermia needs hospital",
+          "Person may seem unconscious but recoverable",
+          "Do not give up on resuscitation",
+          "Warm up at hospital with specialized equipment",
+        ],
+      },
+      {
+        step: 6,
+        title: "Prevention",
+        description: "Future safety",
+        instructions: [
+          "Dress warmly in cold weather",
+          "Avoid prolonged cold exposure",
+          "Stay dry",
+          "Eat and stay hydrated",
+        ],
+      },
+    ],
+    emergencyKeywords: [
+      "hypothermia",
+      "severe cold",
+      "baridi",
+      "freezing",
+      "cold exposure",
+    ],
+  },
 ];
+
 
 export function getFirstAidGuide(id: string): FirstAidGuide | undefined {
   return FIRST_AID_GUIDES.find((guide) => guide.id === id);
