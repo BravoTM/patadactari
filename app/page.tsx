@@ -8,7 +8,7 @@ import { SymptomForm } from "@/components/SymptomForm";
 import { t } from "@/lib/i18n";
 import { isEmergency } from "@/lib/emergency";
 import { triageSymptoms } from "@/lib/clientTriage";
-import { Heart, Map } from "lucide-react";
+import { Heart, Activity, Shield, Zap, MapPin, BookOpen } from "lucide-react";
 
 export default function Home() {
   const { language, setLanguage } = useLanguage();
@@ -42,15 +42,15 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 to-white">
+    <main className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-emerald-50 to-white">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-700 rounded-full flex items-center justify-center">
-              <Heart size={18} className="text-white" />
+      <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200/50">
+        <div className="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center shadow-md">
+              <Heart size={20} className="text-white" />
             </div>
-            <h1 className="text-lg font-bold text-green-700">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent">
               {translations.appName}
             </h1>
           </div>
@@ -60,34 +60,56 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-md">
-          {/* Tagline */}
-          <p className="text-center text-gray-600 mb-8 font-medium">
-            {translations.tagline}
-          </p>
+        <div className="w-full max-w-lg">
+          {/* Hero Section */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl mb-4">
+              <Activity size={32} className="text-emerald-700" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+              {language === "en" ? "Your Health Matters" : "Afya Yako ni Muhimu"}
+            </h2>
+            <p className="text-gray-600 text-lg mb-2">
+              {translations.tagline}
+            </p>
+            <p className="text-sm text-gray-500">
+              {language === "en" 
+                ? "Get instant medical guidance and find nearby facilities"
+                : "Pata mwongozo wa haraka wa kimatibabu na tafuta vituo vya karibu"}
+            </p>
+          </div>
 
-          {/* Form */}
-          <SymptomForm
-            language={language}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-          />
+          {/* Form Card */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-8 border border-gray-100">
+            <SymptomForm
+              language={language}
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+            />
+          </div>
 
-          {/* Info Cards */}
-          <div className="grid grid-cols-2 gap-4 mt-10">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-xs text-blue-900 font-medium">
+          {/* Feature Cards */}
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-5 rounded-xl border border-emerald-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-2">
+                <Shield size={20} className="text-emerald-700" />
+              </div>
+              <p className="text-xs text-emerald-900 font-semibold mb-1">
                 {language === "en" ? "🔒 Private" : "🔒 Siri"}
               </p>
-              <p className="text-xs text-blue-700 mt-1">
+              <p className="text-xs text-emerald-700 leading-relaxed">
                 {translations.privacy}
               </p>
             </div>
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <p className="text-xs text-orange-900 font-medium">
+
+            <div className="bg-gradient-to-br from-red-50 to-orange-50 p-5 rounded-xl border border-red-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-2">
+                <Zap size={20} className="text-red-700" />
+              </div>
+              <p className="text-xs text-red-900 font-semibold mb-1">
                 {language === "en" ? "⚠️ Emergency" : "⚠️ Dharura"}
               </p>
-              <p className="text-xs text-orange-700 mt-1">
+              <p className="text-xs text-red-700 leading-relaxed">
                 {language === "en"
                   ? "Call 999 for emergencies"
                   : "Piga 999 kwa dharura"}
@@ -95,31 +117,61 @@ export default function Home() {
             </div>
           </div>
 
-          {/* First Aid Button */}
-          <a
-            href="/firstaid"
-            className="w-full mt-6 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition-shadow text-center"
-          >
-            {language === "en"
-              ? "📖 First Aid Guide"
-              : "📖 Mwongozo wa Msaada wa Kwanza"}
-          </a>
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <a
+              href="/maps"
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 text-center flex items-center justify-center gap-2 group"
+            >
+              <MapPin size={20} className="group-hover:scale-110 transition-transform" />
+              {language === "en"
+                ? "Find Nearby Hospitals"
+                : "Tafuta Hospitali za Karibu"}
+            </a>
 
-          {/* Maps Button */}
-          <a
-            href="/maps"
-            className="w-full mt-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition-shadow text-center"
-          >
-            {language === "en"
-              ? "🗺️ Hospital Map"
-              : "🗺️ Ramani ya Hospitali"}
-          </a>
+            <a
+              href="/firstaid"
+              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-4 px-6 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 text-center flex items-center justify-center gap-2 group"
+            >
+              <BookOpen size={20} className="group-hover:scale-110 transition-transform" />
+              {language === "en"
+                ? "First Aid Guide"
+                : "Mwongozo wa Msaada wa Kwanza"}
+            </a>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <p className="text-xs text-gray-500 text-center mb-4">
+              {language === "en" ? "Trusted by thousands" : "Kutegemewa na maelfu"}
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-700">24/7</div>
+                <p className="text-xs text-gray-600">
+                  {language === "en" ? "Available" : "Inayopatikana"}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-700">100%</div>
+                <p className="text-xs text-gray-600">
+                  {language === "en" ? "Confidential" : "Siri"}
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-700">🏥</div>
+                <p className="text-xs text-gray-600">
+                  {language === "en" ? "100+ Hospitals" : "100+ Hospitali"}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-50 border-t border-gray-200 py-6 mt-12">
-        <div className="max-w-md mx-auto px-4 text-center text-xs text-gray-600">
+      <footer className="bg-white/50 border-t border-gray-200/50 py-8 mt-12">
+        <div className="max-w-2xl mx-auto px-4 text-center text-xs text-gray-600">
           <p className="mb-2">{translations.disclaimer}</p>
           <p className="text-gray-500">{translations.privacyFull}</p>
         </div>
