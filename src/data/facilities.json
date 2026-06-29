@@ -1,0 +1,152 @@
+[
+  {
+    "id": 1,
+    "name": "Mama Lucy Kibaki Hospital",
+    "level": 5,
+    "area": "Embakasi",
+    "lat": -1.2921,
+    "lng": 36.8879,
+    "phone": "+254 20 2719000",
+    "hours": "24 hours"
+  },
+  {
+    "id": 2,
+    "name": "Mbagathi Hospital",
+    "level": 5,
+    "area": "Langata",
+    "lat": -1.3167,
+    "lng": 36.7833,
+    "phone": "+254 20 2725000",
+    "hours": "24 hours"
+  },
+  {
+    "id": 3,
+    "name": "Pumwani Maternity Hospital",
+    "level": 5,
+    "area": "Eastleigh",
+    "lat": -1.2742,
+    "lng": 36.8499,
+    "phone": "+254 20 2763000",
+    "hours": "24 hours"
+  },
+  {
+    "id": 4,
+    "name": "Mathare Hospital",
+    "level": 4,
+    "area": "Mathare",
+    "lat": -1.2600,
+    "lng": 36.8700,
+    "phone": "+254 20 2723000",
+    "hours": "24 hours"
+  },
+  {
+    "id": 5,
+    "name": "Mutuini Hospital",
+    "level": 4,
+    "area": "Dagoretti",
+    "lat": -1.3200,
+    "lng": 36.7200,
+    "phone": "+254 20 2003000",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 6,
+    "name": "Westlands Health Centre",
+    "level": 3,
+    "area": "Westlands",
+    "lat": -1.2635,
+    "lng": 36.8030,
+    "phone": "+254 20 4451000",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 7,
+    "name": "Kangemi Health Centre",
+    "level": 3,
+    "area": "Kangemi",
+    "lat": -1.2700,
+    "lng": 36.7400,
+    "phone": "+254 20 4441000",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 8,
+    "name": "Kibera South Health Centre",
+    "level": 3,
+    "area": "Kibera",
+    "lat": -1.3133,
+    "lng": 36.7833,
+    "phone": "+254 20 2003500",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 9,
+    "name": "Dandora Health Centre",
+    "level": 3,
+    "area": "Dandora",
+    "lat": -1.2500,
+    "lng": 36.9000,
+    "phone": "+254 20 2003600",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 10,
+    "name": "Kayole Health Centre",
+    "level": 3,
+    "area": "Kayole",
+    "lat": -1.2800,
+    "lng": 36.9100,
+    "phone": "+254 20 2003700",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 11,
+    "name": "Githurai Health Centre",
+    "level": 3,
+    "area": "Githurai",
+    "lat": -1.2200,
+    "lng": 36.9000,
+    "phone": "+254 20 2003800",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 12,
+    "name": "Huruma Health Centre",
+    "level": 3,
+    "area": "Huruma",
+    "lat": -1.2550,
+    "lng": 36.8650,
+    "phone": "+254 20 2003900",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 13,
+    "name": "Makadara Health Centre",
+    "level": 3,
+    "area": "Makadara",
+    "lat": -1.3000,
+    "lng": 36.8600,
+    "phone": "+254 20 2004000",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 14,
+    "name": "Karen Hospital (Public Wing)",
+    "level": 4,
+    "area": "Karen",
+    "lat": -1.3500,
+    "lng": 36.7100,
+    "phone": "+254 20 2004100",
+    "hours": "8am - 5pm"
+  },
+  {
+    "id": 15,
+    "name": "Ruaraka Health Centre",
+    "level": 3,
+    "area": "Ruaraka",
+    "lat": -1.2400,
+    "lng": 36.8800,
+    "phone": "+254 20 2004200",
+    "hours": "8am - 5pm"
+  }
+]
