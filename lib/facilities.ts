@@ -1,4 +1,4 @@
-import facilitiesData from "@/data/facilities.json";
+import { facilitiesData } from "@/data/facilities";
 
 export interface Facility {
   id: string;

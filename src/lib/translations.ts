@@ -4,6 +4,7 @@ export const translations = {
     navHome: "Home",
     navHowItWorks: "How it works",
     navFacilities: "Facilities",
+    navFirstAid: "First aid",
     navAbout: "About",
     navCTA: "Check Symptoms",
 
@@ -96,6 +97,21 @@ export const translations = {
     footerPrivacy: "Designed in compliance with Kenya Data Protection Act 2019",
     footerEmergency: "Medical emergency? Call",
     footerEmergencyDesc: "or go to your nearest Level 5 hospital immediately.",
+
+    // First aid
+    firstAidBadge: "Step-by-step emergency procedures",
+    firstAidTitle: "First Aid Guide",
+    firstAidSubtitle: "Quick reference for common injuries and emergencies. If symptoms are life-threatening, call 999 immediately.",
+    firstAidSymptomTitle: "Describe your situation",
+    firstAidSymptomDesc: "Type what is happening. Life-threatening keywords like bleeding or blood will trigger emergency mode.",
+    firstAidSymptomPlaceholder: "e.g. there is blood from a wound...",
+    firstAidSymptomBtn: "Check",
+    firstAidSearch: "Search guides...",
+    firstAidBack: "Back to all guides",
+    firstAidEmpty: "No guides match your search.",
+    firstAidEmergencyNote: "If the situation is worsening or involves severe bleeding, call emergency services now.",
+    firstAidAllCategories: "All",
+    firstAidGuidesCount: "guides",
   },
 
   sw: {
@@ -103,6 +119,7 @@ export const translations = {
     navHome: "Nyumbani",
     navHowItWorks: "Jinsi inavyofanya kazi",
     navFacilities: "Vituo vya afya",
+    navFirstAid: "Msaada wa kwanza",
     navAbout: "Kuhusu",
     navCTA: "Angalia Dalili",
 
@@ -195,6 +212,21 @@ export const translations = {
     footerPrivacy: "Imeundwa kulingana na Sheria ya Ulinzi wa Data Kenya 2019",
     footerEmergency: "Dharura ya kimatibabu? Piga",
     footerEmergencyDesc: "au nenda hospitali yako ya karibu ya Kiwango cha 5 mara moja.",
+
+    // First aid
+    firstAidBadge: "Utaratibu wa dharura hatua kwa hatua",
+    firstAidTitle: "Mwongozo wa Msaada wa Kwanza",
+    firstAidSubtitle: "Rejea ya haraka kwa majeraha na dharura za kawaida. Ikiwa dalili zinahatarisha maisha, piga 999 mara moja.",
+    firstAidSymptomTitle: "Elezea hali yako",
+    firstAidSymptomDesc: "Andika kinachotokea. Maneno ya dharura kama kutoka damu yataamsha hali ya dharura.",
+    firstAidSymptomPlaceholder: "mf. kuna damu kutoka kwenye jeraha...",
+    firstAidSymptomBtn: "Angalia",
+    firstAidSearch: "Tafuta mwongozo...",
+    firstAidBack: "Rudi kwenye mwongozo wote",
+    firstAidEmpty: "Hakuna mwongozo unaolingana na utafutaji wako.",
+    firstAidEmergencyNote: "Ikiwa hali inazidi kuwa mbaya au kuna kutoka damu kwingi, piga simu ya dharura sasa.",
+    firstAidAllCategories: "Zote",
+    firstAidGuidesCount: "mwongozo",
   },
 };
 

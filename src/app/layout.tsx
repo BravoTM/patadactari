@@ -28,16 +28,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-teal-50 via-white to-teal-50 min-h-screen`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
+        <div className="bg-mesh" aria-hidden="true" />
         <LanguageProvider>
           <Header />
-          <main className="pt-24 pb-6 min-h-screen">
-            {children}
-          </main>
+          <main className="pt-24 pb-8 min-h-screen">{children}</main>
           <Footer />
         </LanguageProvider>
       </body>
     </html>
-  );}
+  );
+}

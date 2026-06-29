@@ -2,102 +2,81 @@
 import Link from "next/link";
 import { useLang } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
+import PageHero from "@/components/PageHero";
 
 export default function Home() {
   const { lang } = useLang();
   const t = translations[lang];
+
   const conditions = [
-  { icon: "🦟", title: t.condition1Title, desc: t.condition1Desc, bg: "bg-teal-50" },
-  { icon: "🫁", title: t.condition2Title, desc: t.condition2Desc, bg: "bg-purple-50" },
-  { icon: "💧", title: t.condition3Title, desc: t.condition3Desc, bg: "bg-amber-50" },
-  { icon: "🩹", title: t.condition4Title, desc: t.condition4Desc, bg: "bg-red-50" },
-];
+    { icon: "🦟", title: t.condition1Title, desc: t.condition1Desc, href: "/chat", gradient: "from-teal-50 to-emerald-50" },
+    { icon: "🫁", title: t.condition2Title, desc: t.condition2Desc, href: "/chat", gradient: "from-cyan-50 to-sky-50" },
+    { icon: "💧", title: t.condition3Title, desc: t.condition3Desc, href: "/chat", gradient: "from-amber-50 to-orange-50" },
+    { icon: "🩹", title: t.condition4Title, desc: t.condition4Desc, href: "/firstaid", gradient: "from-rose-50 to-red-50" },
+  ];
 
   const steps = [
-  { num: "1", title: t.step1Title, desc: t.step1Desc },
-  { num: "2", title: t.step2Title, desc: t.step2Desc },
-  { num: "3", title: t.step3Title, desc: t.step3Desc },
-];
+    { num: "01", title: t.step1Title, desc: t.step1Desc },
+    { num: "02", title: t.step2Title, desc: t.step2Desc },
+    { num: "03", title: t.step3Title, desc: t.step3Desc },
+  ];
 
   return (
-    <div className="max-w-3xl mx-auto px-4">
+    <div className="page-container pb-16">
+      <PageHero
+        badge={t.homeBadge}
+        title={
+          <>
+            {t.homeHero1}{" "}
+            <span className="bg-gradient-to-r from-teal-600 to-cyan-500 bg-clip-text text-transparent">
+              {t.homeHero2}
+            </span>
+          </>
+        }
+        subtitle={t.homeSubtitle}
+      >
+        <div className="flex flex-wrap gap-3 justify-center">
+          <Link href="/chat" className="btn-primary">{t.homeCTA}</Link>
+          <Link href="/how-it-works" className="btn-secondary">{t.homeHowItWorks}</Link>
+        </div>
+      </PageHero>
 
-      {/* Hero */}
-      <section className="text-center py-16 px-4">
-  <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-700 text-xs font-medium px-4 py-1.5 rounded-full border border-teal-200 mb-6">
-    <span className="w-1.5 h-1.5 rounded-full bg-teal-500 inline-block" />
-    {lang === "en" ? "Grounded in MoH Kenya Clinical Guidelines 2016" : "Imejengwa kwenye Mwongozo wa MoH Kenya 2016"}
-  </div>
-
-  <h1 className="text-4xl sm:text-5xl font-semibold text-teal-800 leading-tight mb-4">
-  {t.homeHero1}{" "}
-  <span className="text-teal-500">{t.homeHero2}</span>
-</h1>
-  <p className="text-base text-teal-700 leading-relaxed max-w-xl mx-auto mb-8">
-    {t.homeSubtitle}
-  </p>
-
-  <div className="flex flex-wrap gap-3 justify-center">
-    <Link href="/chat" className="bg-teal-700 hover:bg-teal-800 text-white text-sm font-medium px-7 py-3 rounded-full transition-all duration-150 hover:-translate-y-px">
-      {t.homeCTA}
-    </Link>
-    <Link href="/how-it-works" className="bg-white hover:bg-teal-50 text-teal-700 text-sm font-medium px-7 py-3 rounded-full border border-teal-200 transition-all duration-150">
-      {t.homeHowItWorks}
-    </Link>
-  </div>
-</section>
-
-      {/* Conditions */}
-      <section className="mb-12">
-        <p className="text-xs font-medium text-teal-600 uppercase tracking-wider mb-4">
-         {t.homeConditionsLabel}
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <section className="mb-14 animate-fade-up animate-fade-up-delay-1">
+        <p className="section-label text-center">{t.homeConditionsLabel}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {conditions.map((c) => (
-            <div
+            <Link
               key={c.title}
-              className="bg-white border border-teal-100 rounded-2xl p-5 text-center hover:border-teal-300 transition-colors duration-150"
+              href={c.href}
+              className={`glass-card p-5 text-center group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-gradient-to-br ${c.gradient}`}
             >
-              <div className={`w-11 h-11 ${c.bg} rounded-xl flex items-center justify-center text-2xl mx-auto mb-3`}>
-                {c.icon}
-              </div>
-              <h3 className="text-sm font-medium text-teal-800 mb-1">{c.title}</h3>
-              <p className="text-xs text-teal-600 leading-relaxed">{c.desc}</p>
-            </div>
+              <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">{c.icon}</div>
+              <h3 className="text-sm font-semibold text-teal-900 mb-1">{c.title}</h3>
+              <p className="text-xs text-teal-600/80 leading-relaxed">{c.desc}</p>
+            </Link>
           ))}
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="mb-12">
-        <p className="text-xs font-medium text-teal-600 uppercase tracking-wider mb-4">
-          How it works
-        </p>
-        <div className="flex flex-col gap-3">
+      <section className="mb-14 animate-fade-up animate-fade-up-delay-2">
+        <p className="section-label text-center">{t.homeStepsLabel}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {steps.map((s) => (
-            <div
-              key={s.num}
-              className="bg-white border border-teal-100 rounded-2xl px-5 py-4 flex items-center gap-4"
-            >
-              <div className="w-8 h-8 rounded-full bg-teal-700 text-white text-sm font-semibold flex items-center justify-center shrink-0">
-                {s.num}
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-teal-800 mb-0.5">{s.title}</h4>
-                <p className="text-xs text-teal-600">{s.desc}</p>
-              </div>
+            <div key={s.num} className="glass-card p-5 flex flex-col gap-3 hover:shadow-md transition-shadow">
+              <span className="text-2xl font-bold text-teal-500/40">{s.num}</span>
+              <h4 className="text-sm font-semibold text-teal-900">{s.title}</h4>
+              <p className="text-xs text-teal-600/80 leading-relaxed">{s.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Disclaimer */}
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 text-center mb-8">
-        <p className="text-xs text-amber-800 leading-relaxed">
-          <span className="font-medium">{t.homeImportant} </span>
-{t.homeDisclaimer}
+      <div className="glass-card bg-amber-50/40 border-amber-200/40 px-6 py-5 text-center animate-fade-up animate-fade-up-delay-3">
+        <p className="text-xs text-amber-900/80 leading-relaxed max-w-xl mx-auto">
+          <span className="font-semibold">{t.homeImportant} </span>
+          {t.homeDisclaimer}
         </p>
       </div>
-
     </div>
-  );}
+  );
+}

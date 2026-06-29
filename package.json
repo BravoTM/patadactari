@@ -12,6 +12,8 @@
     "@langchain/community": "^1.1.29",
     "@langchain/core": "^1.2.0",
     "@langchain/google-genai": "^2.1.31",
+    "@langchain/openai": "^1.5.3",
+    "@vis.gl/react-google-maps": "^1.8.3",
     "faiss-node": "^0.5.1",
     "langchain": "^1.4.5",
     "next": "15.5.19",

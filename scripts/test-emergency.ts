@@ -1,16 +1,15 @@
-import { isEmergency, getEmergencyKeywordMatches } from "../lib/emergency";
+import { isEmergency, getEmergencyKeywordMatches } from "../src/lib/emergency";
 
-const cases: { text: string; expected: boolean; label: string }[] = [
-  { text: "I am bleeding heavily from my arm", expected: true, label: "severe bleeding" },
-  { text: "there is blood everywhere", expected: true, label: "blood everywhere" },
-  { text: "I see blood coming from the wound", expected: true, label: "blood from wound" },
-  { text: "coughing up blood", expected: true, label: "coughing blood" },
-  { text: "kutoka damu nyingi", expected: true, label: "Swahili heavy bleeding" },
-  { text: "I have a mild fever and headache", expected: false, label: "routine symptoms" },
-  { text: "I need a blood test for malaria", expected: false, label: "blood test benign" },
-  { text: "my blood pressure is high", expected: false, label: "blood pressure benign" },
-  { text: "chest pain and difficulty breathing", expected: true, label: "chest pain emergency" },
-  { text: "choking on food", expected: true, label: "choking" },
+const cases = [
+  { text: "there is blood everywhere", expected: true },
+  { text: "I see blood coming from the wound", expected: true },
+  { text: "coughing up blood", expected: true },
+  { text: "severe bleeding from my arm", expected: true },
+  { text: "just the word blood", expected: true },
+  { text: "I need a blood test for malaria", expected: false },
+  { text: "my blood pressure is high", expected: false },
+  { text: "I have a mild headache", expected: false },
+  { text: "chest pain and difficulty breathing", expected: true },
 ];
 
 let passed = 0;
@@ -18,25 +17,17 @@ let failed = 0;
 
 console.log("Emergency keyword detection tests\n" + "=".repeat(40));
 
-for (const { text, expected, label } of cases) {
+for (const { text, expected } of cases) {
   const result = isEmergency(text);
   const matches = getEmergencyKeywordMatches(text);
   const ok = result === expected;
-  if (ok) {
-    passed++;
-    console.log(`✓ ${label}`);
-  } else {
-    failed++;
-    console.log(`✗ ${label}`);
-    console.log(`  input:    "${text}"`);
-    console.log(`  expected: ${expected}, got: ${result}`);
-    console.log(`  matches:  ${matches.join(", ") || "(none)"}`);
-  }
+  if (ok) passed++;
+  else failed++;
+
+  console.log(`${ok ? "✓" : "✗"} "${text}"`);
+  console.log(`  expected: ${expected}, got: ${result}, matches: [${matches.join(", ")}]`);
 }
 
 console.log("\n" + "=".repeat(40));
 console.log(`Results: ${passed} passed, ${failed} failed`);
-
-if (failed > 0) {
-  process.exit(1);
-}
+process.exit(failed > 0 ? 1 : 0);

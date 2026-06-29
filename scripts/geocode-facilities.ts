@@ -1,126 +1,85 @@
 /**
- * Geocode facility addresses via OpenStreetMap Nominatim and update data/facilities.json.
- * Manual overrides are used when geocoding returns no result or a wrong match.
- * Run: npx ts-node --project tsconfig.scripts.json scripts/geocode-facilities.ts
+ * Geocode facilities using Google Geocoding API.
+ * Run: npx tsx scripts/geocode-facilities.ts
  */
-import fs from "fs";
-import path from "path";
+import { writeFileSync } from "fs";
+import { join } from "path";
+import { getMapsApiKey } from "../src/lib/env.server";
 
 interface Facility {
-  id: string;
+  id: number;
   name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  [key: string]: unknown;
+  level: number;
+  area: string;
+  address?: string;
+  lat: number;
+  lng: number;
+  phone: string;
+  hours: string;
 }
 
-/** Verified coords from KMHFR, Wikipedia, or OpenStreetMap when APIs fail. */
-const VERIFIED_OVERRIDES: Record<string, { lat: number; lng: number; source: string }> = {
-  nbi_hospital: { lat: -1.296115, lng: 36.804718, source: "Wikipedia" },
-  mlk: { lat: -1.27416, lng: 36.89843, source: "KMHFR" },
-  mbagathi: { lat: -1.30793, lng: 36.80317, source: "KMHFR" },
-  mathare: { lat: -1.25323, lng: 36.867485, source: "KMHFR" },
-  eastleigh: { lat: -1.27175, lng: 36.85087, source: "data.afro.co.ke" },
-  kayole: { lat: -1.26649, lng: 36.91668, source: "KMHFR/Kayole II" },
-  kasarani: { lat: -1.21821, lng: 36.90139, source: "KMHFR" },
-  nwh: { lat: -1.293856, lng: 36.796071, source: "Wikidata" },
-  karen: { lat: -1.336111, lng: 36.726111, source: "Wikipedia" },
-  westlands: { lat: -1.263014, lng: 36.803456, source: "KMHFR" },
-  kibera: { lat: -1.3152, lng: 36.7858, source: "Mugumo-Ini, Langata" },
+const QUERIES: Record<number, string> = {
+  1: "Mama Lucy Kibaki Hospital, Kayole Spine Road, Nairobi, Kenya",
+  2: "Mbagathi District Hospital, Raila Odinga Way, Nairobi, Kenya",
+  3: "Pumwani Maternity Hospital, General Waruingi Street, Nairobi, Kenya",
+  4: "Mathare North Hospital, Juja Road, Nairobi, Kenya",
+  5: "Mutuini Sub County Hospital, Waiyaki Way, Nairobi, Kenya",
+  6: "Westlands Health Centre, Muthithi Road, Nairobi, Kenya",
+  7: "Kangemi Health Centre, Waiyaki Way, Kangemi, Nairobi, Kenya",
+  8: "Kibera South Health Centre, Kibera, Nairobi, Kenya",
+  9: "Dandora Health Centre, Koma Rock Road, Nairobi, Kenya",
+  10: "Kayole Health Centre, Kayole Spine Road, Nairobi, Kenya",
+  11: "Githurai Health Centre, Thika Road, Githurai, Nairobi, Kenya",
+  12: "Huruma Health Centre, Juja Road, Huruma, Nairobi, Kenya",
+  13: "Makadara Health Centre, Hamza Road, Makadara, Nairobi, Kenya",
+  14: "Karen Hospital, Karen Road, Nairobi, Kenya",
+  15: "Ruaraka Health Centre, Thika Road, Ruaraka, Nairobi, Kenya",
 };
 
-async function geocodeFacility(
-  facility: Facility
-): Promise<{ lat: number; lng: number; displayName: string } | null> {
-  const query = `${facility.name}, ${facility.address}, Nairobi, Kenya`;
-  const url = new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("q", query);
-  url.searchParams.set("format", "json");
-  url.searchParams.set("limit", "1");
-  url.searchParams.set("countrycodes", "ke");
-
-  const res = await fetch(url.toString(), {
-    headers: {
-      "User-Agent": "PataDaktari/1.0 (health-triage-app; contact@patadaktari.local)",
-    },
-  });
-
-  const data = (await res.json()) as Array<{ lat: string; lon: string; display_name: string }>;
-  if (!data[0]) {
-    // Fallback: search by name only
-    const fallbackUrl = new URL("https://nominatim.openstreetmap.org/search");
-    fallbackUrl.searchParams.set("q", `${facility.name}, Nairobi, Kenya`);
-    fallbackUrl.searchParams.set("format", "json");
-    fallbackUrl.searchParams.set("limit", "1");
-    fallbackUrl.searchParams.set("countrycodes", "ke");
-
-    const fallbackRes = await fetch(fallbackUrl.toString(), {
-      headers: {
-        "User-Agent": "PataDaktari/1.0 (health-triage-app; contact@patadaktari.local)",
-      },
-    });
-    const fallback = (await fallbackRes.json()) as Array<{
-      lat: string;
-      lon: string;
-      display_name: string;
-    }>;
-    if (!fallback[0]) return null;
-    return {
-      lat: parseFloat(fallback[0].lat),
-      lng: parseFloat(fallback[0].lon),
-      displayName: fallback[0].display_name,
-    };
+async function geocode(query: string, key: string) {
+  const url =
+    "https://maps.googleapis.com/maps/api/geocode/json?" +
+    new URLSearchParams({ address: query, key, region: "ke" });
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status !== "OK" || !data.results?.[0]) {
+    return { error: data.status, query };
   }
-
+  const r = data.results[0];
   return {
-    lat: parseFloat(data[0].lat),
-    lng: parseFloat(data[0].lon),
-    displayName: data[0].display_name,
+    lat: r.geometry.location.lat,
+    lng: r.geometry.location.lng,
+    formatted: r.formatted_address,
+    placeId: r.place_id,
+    locationType: r.geometry.location_type,
   };
 }
 
 async function main() {
-  const dataPath = path.join(process.cwd(), "data", "facilities.json");
-  const facilities = JSON.parse(fs.readFileSync(dataPath, "utf8")) as Facility[];
-
-  console.log(`Geocoding ${facilities.length} facilities via OpenStreetMap...\n`);
-
-  for (const facility of facilities) {
-    const override = VERIFIED_OVERRIDES[facility.id];
-    if (override) {
-      facility.latitude = override.lat;
-      facility.longitude = override.lng;
-      console.log(`✓ ${facility.id}: ${override.source} → ${override.lat}, ${override.lng}`);
-      continue;
-    }
-
-    const result = await geocodeFacility(facility);
-    if (result) {
-      const oldLat = facility.latitude;
-      const oldLng = facility.longitude;
-      facility.latitude = Math.round(result.lat * 1e6) / 1e6;
-      facility.longitude = Math.round(result.lng * 1e6) / 1e6;
-      const moved =
-        Math.abs(oldLat - facility.latitude) > 0.001 ||
-        Math.abs(oldLng - facility.longitude) > 0.001;
-      console.log(
-        `${moved ? "✓" : "·"} ${facility.id}: ${facility.name}`,
-        `\n    ${result.displayName.slice(0, 80)}...`,
-        `\n    ${facility.latitude}, ${facility.longitude}`,
-        moved ? ` (was ${oldLat}, ${oldLng})` : ""
-      );
-    } else {
-      console.warn(`  ⚠ ${facility.id}: no result`);
-    }
-    await new Promise((r) => setTimeout(r, 1100));
+  const key = getMapsApiKey();
+  if (!key) {
+    console.error("No Google API key found");
+    process.exit(1);
   }
 
-  fs.writeFileSync(dataPath, JSON.stringify(facilities, null, 2) + "\n", "utf8");
-  console.log("\nUpdated data/facilities.json");
+  const path = join(process.cwd(), "src/data/facilities.ts");
+  const { facilitiesData } = await import("../src/data/facilities");
+  const facilities: Facility[] = facilitiesData.map((f) => ({ ...f }));
+
+  for (const f of facilities) {
+    const query = QUERIES[f.id] ?? `${f.name}, ${f.address}, Nairobi, Kenya`;
+    await new Promise((r) => setTimeout(r, 250));
+    const result = await geocode(query, key);
+    console.log(JSON.stringify({ id: f.id, name: f.name, query, result }));
+    if ("lat" in result && result.lat) {
+      f.lat = +result.lat.toFixed(6);
+      f.lng = +result.lng.toFixed(6);
+    }
+  }
+
+  const content = `export const facilitiesData = ${JSON.stringify(facilities, null, 2)} as const;\n`;
+  writeFileSync(path, content);
+  console.log("Updated facilities.ts");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main();

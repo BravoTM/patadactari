@@ -1,9 +1,12 @@
 import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { Document } from "@langchain/core/documents";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { readFileSync } from "fs";
 import path from "path";
-console.log("API KEY:", process.env.GOOGLE_API_KEY);
+import { PDFParse } from "pdf-parse";
+import { getGeminiApiKey, getTriageApiKey, isValidApiKey } from "@/lib/env.server";
 
 const SYSTEM_PROMPT = `You are PataDaktari, a health triage assistant built specifically for Nairobi residents.
 
@@ -21,8 +24,11 @@ Your rules:
 - Respond in the same language the user writes in.
 - Be clear, simple and easy to understand. Avoid complex medical terms.`;
 
+const OPENAI_MODELS = ["gpt-4o-mini", "gpt-4o"] as const;
+const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"] as const;
+
 let cachedChunks: Document[] | null = null;
-let cachedEmbeddings: number[][] | null = null;
+let cachedEmbeddings: { key: string; vectors: number[][] } | null = null;
 
 function cosineSimilarity(a: number[], b: number[]): number {
   const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
@@ -31,66 +37,145 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (magA * magB);
 }
 
+function messageText(content: string | { text?: string }[]): string {
+  if (typeof content === "string") return content;
+  return content.map((part) => part.text ?? "").join("");
+}
+
 async function loadChunks(): Promise<Document[]> {
   if (cachedChunks) return cachedChunks;
   const pdfPath = path.join(process.cwd(), "public", "guidelines", "moh_guidelines.pdf");
-  const loader = new PDFLoader(pdfPath);
-  const docs = await loader.load();
-  const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 });
-  cachedChunks = await splitter.splitDocuments(docs);
-  return cachedChunks;
+  const workerPath = path.join(
+    process.cwd(),
+    "node_modules",
+    "pdfjs-dist",
+    "legacy",
+    "build",
+    "pdf.worker.mjs"
+  );
+  PDFParse.setWorker(`file://${workerPath.replace(/\\/g, "/")}`);
+  const parser = new PDFParse({ data: readFileSync(pdfPath) });
+  try {
+    const { text } = await parser.getText();
+    const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 });
+    cachedChunks = await splitter.createDocuments([text]);
+    return cachedChunks;
+  } finally {
+    await parser.destroy();
+  }
 }
 
-async function getSimilarChunks(query: string, chunks: Document[]): Promise<string> {
+async function getSimilarChunks(
+  query: string,
+  chunks: Document[],
+  provider: "openai" | "gemini",
+  apiKey: string
+): Promise<string> {
   try {
-    const embeddings = new GoogleGenerativeAIEmbeddings({
-     apiKey: "change to your api key",
-      model: "text-embedding-004",
-    });
+    const cacheKey = `${provider}:${chunks.length}`;
+    const embeddings =
+      provider === "openai"
+        ? new OpenAIEmbeddings({ apiKey, model: "text-embedding-3-small" })
+        : new GoogleGenerativeAIEmbeddings({ apiKey, model: "text-embedding-004" });
 
-    if (!cachedEmbeddings) {
-      cachedEmbeddings = await embeddings.embedDocuments(
-        chunks.map((c) => c.pageContent)
-      );
+    if (!cachedEmbeddings || cachedEmbeddings.key !== cacheKey) {
+      cachedEmbeddings = {
+        key: cacheKey,
+        vectors: await embeddings.embedDocuments(chunks.map((c) => c.pageContent)),
+      };
     }
 
     const queryEmbedding = await embeddings.embedQuery(query);
-    const scored = cachedEmbeddings.map((emb, i) => ({
+    const scored = cachedEmbeddings.vectors.map((emb, i) => ({
       score: cosineSimilarity(queryEmbedding, emb),
       content: chunks[i].pageContent,
     }));
 
     scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, 4).map((s) => s.content).join("\n\n");
-  } catch {
+    return scored
+      .slice(0, 4)
+      .map((s) => s.content)
+      .join("\n\n");
+  } catch (error) {
+    console.error("Embedding lookup failed:", error);
     return "";
   }
 }
 
+async function invokeOpenAI(apiKey: string, userPrompt: string): Promise<string> {
+  const messages = [new SystemMessage(SYSTEM_PROMPT), new HumanMessage(userPrompt)];
+
+  let lastError: unknown;
+  for (const model of OPENAI_MODELS) {
+    try {
+      const llm = new ChatOpenAI({ apiKey, model, maxTokens: 800 });
+      const response = await llm.invoke(messages);
+      const text = messageText(response.content as string | { text?: string }[]);
+      if (text.trim()) return text;
+    } catch (error) {
+      lastError = error;
+      console.error(`OpenAI model ${model} failed:`, error);
+    }
+  }
+
+  throw lastError ?? new Error("All OpenAI models failed");
+}
+
+async function invokeGemini(apiKey: string, userPrompt: string): Promise<string> {
+  const messages = [new SystemMessage(SYSTEM_PROMPT), new HumanMessage(userPrompt)];
+
+  let lastError: unknown;
+  for (const model of GEMINI_MODELS) {
+    try {
+      const llm = new ChatGoogleGenerativeAI({
+        apiKey,
+        model,
+        maxOutputTokens: 800,
+      });
+      const response = await llm.invoke(messages);
+      const text = messageText(response.content as string | { text?: string }[]);
+      if (text.trim()) return text;
+    } catch (error) {
+      lastError = error;
+      console.error(`Gemini model ${model} failed:`, error);
+    }
+  }
+
+  throw lastError ?? new Error("All Gemini models failed");
+}
+
 export async function getTriage(userMessage: string): Promise<string> {
-  const llm = new ChatGoogleGenerativeAI({
-   apiKey: "change to your api key",
-    model: "gemini-2.0-flash",
-    maxOutputTokens: 800,
-  });
+  const auth = getTriageApiKey();
+  if (!auth) {
+    throw new Error("No AI API key configured (set OPENAI_API_KEY or GEMINI_API_KEY)");
+  }
 
   let context = "";
 
   try {
     const chunks = await loadChunks();
-    context = await getSimilarChunks(userMessage, chunks);
-  } catch {
-    console.error("Could not load MoH PDF. Running without guidelines context.");
+    context = await getSimilarChunks(userMessage, chunks, auth.provider, auth.key);
+  } catch (error) {
+    console.error("Could not load MoH PDF. Running without guidelines context.", error);
   }
 
   const userPrompt = context
     ? `Context from Kenya MoH Clinical Guidelines:\n${context}\n\nPatient describes: ${userMessage}`
     : `Patient describes: ${userMessage}`;
 
-  const response = await llm.invoke([
-    { role: "system", content: SYSTEM_PROMPT },
-    { role: "user", content: userPrompt },
-  ]);
-
-  return response.content as string;
+  try {
+    if (auth.provider === "openai") {
+      return await invokeOpenAI(auth.key, userPrompt);
+    }
+    return await invokeGemini(auth.key, userPrompt);
+  } catch (primaryError) {
+    if (auth.provider === "openai") {
+      const geminiKey = getGeminiApiKey();
+      if (isValidApiKey(geminiKey)) {
+        console.warn("OpenAI failed; trying Gemini fallback.");
+        return invokeGemini(geminiKey, userPrompt);
+      }
+    }
+    throw primaryError;
+  }
 }
