@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FIRST_AID_GUIDES, getDiseasesFromSymptoms } from "@/lib/firstaid";
+import { isEmergency } from "@/lib/emergency";
 import { useLanguage } from "@/components/LanguageProvider";
-import { t } from "@/lib/i18n";
 import FirstAidGuideComponent from "@/components/FirstAidGuideComponent";
 import { Heart, ArrowLeft, Search, AlertCircle, Stethoscope } from "lucide-react";
 import Link from "next/link";
 
 export default function FirstAidPage() {
   const { language } = useLanguage();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuide, setSelectedGuide] = useState<string | null>(null);
   const [symptomInput, setSymptomInput] = useState("");
@@ -30,6 +32,15 @@ export default function FirstAidPage() {
   const selectedGuideData = selectedGuide
     ? FIRST_AID_GUIDES.find((g) => g.id === selectedGuide)
     : null;
+
+  const handleSymptomSearch = () => {
+    if (isEmergency(symptomInput)) {
+      sessionStorage.setItem("emergencySymptoms", symptomInput);
+      router.push("/emergency");
+      return;
+    }
+    setShowDiseases(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-white">
@@ -94,7 +105,7 @@ export default function FirstAidPage() {
                   className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition"
                 />
                 <button
-                  onClick={() => setShowDiseases(true)}
+                  onClick={handleSymptomSearch}
                   disabled={symptomInput.trim().length < 2}
                   className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
                 >

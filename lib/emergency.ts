@@ -14,6 +14,14 @@ const EMERGENCY_EN = [
   "convulsion",
   "severe bleeding",
   "bleeding heavily",
+  "bleeding",
+  "blood loss",
+  "coughing blood",
+  "cough up blood",
+  "vomiting blood",
+  "blood in stool",
+  "blood in urine",
+  "losing blood",
   "choking",
   "overdose",
   "severe head injury",
@@ -35,6 +43,17 @@ const EMERGENCY_EN = [
   "suffocating",
 ];
 
+const BENIGN_BLOOD_PHRASES = [
+  "blood pressure",
+  "high blood pressure",
+  "blood test",
+  "blood sugar",
+  "blood sample",
+  "blood work",
+  "blood count",
+  "shinikizo la damu",
+];
+
 const EMERGENCY_SW = [
   "maumivu ya kifua",
   "mshtuko wa moyo",
@@ -45,7 +64,11 @@ const EMERGENCY_SW = [
   "kizunguzungu kikali",
   "kifafa",
   "degedege",
+  "kutoka damu",
   "kutoka damu nyingi",
+  "damu nyingi",
+  "kutapika damu",
+  "damu kwenye kinyesi",
   "kukosekana pumzi",
   "kupigwa sumu",
   "kichwa kikali",
@@ -59,18 +82,49 @@ const EMERGENCY_SW = [
   "mgomba mkali",
 ];
 
+/** Standalone "blood"/"damu" triggers emergency unless only benign context (e.g. blood pressure). */
+function hasBloodEmergency(text: string): boolean {
+  const lower = text.toLowerCase();
+  const hasBloodWord = /\bblood\b/.test(lower) || /\bdamu\b/.test(lower);
+  if (!hasBloodWord) return false;
+
+  const onlyBenign = BENIGN_BLOOD_PHRASES.some((phrase) => lower.includes(phrase));
+  const hasEmergencyBloodContext =
+    lower.includes("bleeding") ||
+    lower.includes("severe") ||
+    lower.includes("heavy") ||
+    lower.includes("loss") ||
+    lower.includes("cough") ||
+    lower.includes("vomit") ||
+    lower.includes("stool") ||
+    lower.includes("urine") ||
+    lower.includes("wound") ||
+    lower.includes("cut") ||
+    lower.includes("injury") ||
+    lower.includes("nyingi") ||
+    lower.includes("kutoka");
+
+  if (onlyBenign && !hasEmergencyBloodContext) return false;
+  return true;
+}
+
 export function isEmergency(text: string): boolean {
   if (!text) return false;
   const lower = text.toLowerCase().trim();
   const keywords = [...EMERGENCY_EN, ...EMERGENCY_SW];
-  
-  return keywords.some((kw) => lower.includes(kw.toLowerCase()));
+
+  if (keywords.some((kw) => lower.includes(kw.toLowerCase()))) return true;
+  return hasBloodEmergency(lower);
 }
 
 export function getEmergencyKeywordMatches(text: string): string[] {
   if (!text) return [];
   const lower = text.toLowerCase().trim();
   const keywords = [...EMERGENCY_EN, ...EMERGENCY_SW];
-  
-  return keywords.filter((kw) => lower.includes(kw.toLowerCase()));
+
+  const matches = keywords.filter((kw) => lower.includes(kw.toLowerCase()));
+  if (hasBloodEmergency(lower) && !matches.some((m) => m.includes("blood") || m.includes("damu"))) {
+    matches.push("blood");
+  }
+  return matches;
 }

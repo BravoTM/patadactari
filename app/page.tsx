@@ -16,26 +16,50 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const translations = t[language];
 
-  const handleSubmit = (symptoms: string) => {
-    // First, check for emergency keywords client-side
+  const handleSubmit = async (symptoms: string) => {
     if (isEmergency(symptoms)) {
+      sessionStorage.setItem("emergencySymptoms", symptoms);
       router.push("/emergency");
       return;
     }
 
-    // Not an emergency - proceed to triage
     setIsLoading(true);
     try {
-      // Run client-side triage
+      const response = await fetch("/api/triage-rag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptoms, language }),
+      });
+
+      const data = await response.json();
+
+      if (data.emergency) {
+        sessionStorage.setItem("emergencySymptoms", symptoms);
+        router.push("/emergency");
+        return;
+      }
+
+      if (response.ok && data.guidance) {
+        sessionStorage.setItem("triageResult", JSON.stringify(data));
+        sessionStorage.setItem("userSymptoms", symptoms);
+        router.push("/triage");
+        return;
+      }
+
       const triageResult = triageSymptoms(symptoms, language);
-      
-      // Store response in sessionStorage to pass to triage page
       sessionStorage.setItem("triageResult", JSON.stringify(triageResult));
       sessionStorage.setItem("userSymptoms", symptoms);
       router.push("/triage");
     } catch (error) {
       console.error("Error submitting symptoms:", error);
-      alert(translations.errorMessage);
+      try {
+        const triageResult = triageSymptoms(symptoms, language);
+        sessionStorage.setItem("triageResult", JSON.stringify(triageResult));
+        sessionStorage.setItem("userSymptoms", symptoms);
+        router.push("/triage");
+      } catch {
+        alert(translations.errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
