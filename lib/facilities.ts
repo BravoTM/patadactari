@@ -3,6 +3,7 @@ import facilitiesData from "@/data/facilities.json";
 export interface Facility {
   id: string;
   name: string;
+  city: string;
   level: 3 | 4 | 5 | 6;
   address: string;
   latitude: number;
@@ -10,19 +11,24 @@ export interface Facility {
   phone: string;
   hours: string;
   emergencyCapable: boolean;
+  specialties: string[];
 }
 
-/**
- * Haversine formula to calculate distance between two geographic points
- * Returns distance in kilometers
- */
+export function getAllFacilities(): Facility[] {
+  return facilitiesData as Facility[];
+}
+
+export function getFacilityById(id: string): Facility | undefined {
+  return getAllFacilities().find((f) => f.id === id);
+}
+
 export function haversineDistance(
   lat1: number,
   lon1: number,
   lat2: number,
   lon2: number
 ): number {
-  const R = 6371; // Earth's radius in kilometers
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -35,65 +41,77 @@ export function haversineDistance(
   return R * c;
 }
 
-/**
- * Get the 3 nearest facilities based on user's location
- * If location not provided, returns the top 3 alphabetically
- */
+export function sortFacilitiesByDistance(
+  facilities: Facility[],
+  userLat: number,
+  userLng: number
+): (Facility & { distance: number })[] {
+  return facilities
+    .map((f) => ({
+      ...f,
+      distance: haversineDistance(userLat, userLng, f.latitude, f.longitude),
+    }))
+    .sort((a, b) => a.distance - b.distance);
+}
+
 export function getNearestFacilities(
   userLat?: number,
-  userLng?: number
+  userLng?: number,
+  limit = 3
 ): Facility[] {
-  const facilities = facilitiesData as Facility[];
+  const facilities = getAllFacilities();
 
   if (userLat !== undefined && userLng !== undefined) {
-    // Calculate distances and sort
-    const withDistances = facilities.map((f) => ({
-      ...f,
-      distance: haversineDistance(userLat, userLng, f.latitude, f.longitude),
-    }));
-
-    return withDistances
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 3)
-      .map(({ distance, ...f }) => f);
+    return sortFacilitiesByDistance(facilities, userLat, userLng)
+      .slice(0, limit)
+      .map(({ distance: _d, ...f }) => f);
   }
 
-  // Default: return first 3 alphabetically
-  return facilities.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 3);
+  return facilities.sort((a, b) => a.name.localeCompare(b.name)).slice(0, limit);
 }
 
-/**
- * Get the 3 nearest Level 4+ (emergency-capable) facilities
- */
 export function getNearestEmergencyFacilities(
   userLat?: number,
-  userLng?: number
+  userLng?: number,
+  limit = 3
 ): Facility[] {
-  const facilities = facilitiesData as Facility[];
-  const emergencyFacilities = facilities.filter((f) => f.emergencyCapable);
+  const emergencyFacilities = getAllFacilities().filter((f) => f.emergencyCapable);
 
   if (userLat !== undefined && userLng !== undefined) {
-    const withDistances = emergencyFacilities.map((f) => ({
-      ...f,
-      distance: haversineDistance(userLat, userLng, f.latitude, f.longitude),
-    }));
-
-    return withDistances
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 3)
-      .map(({ distance, ...f }) => f);
+    return sortFacilitiesByDistance(emergencyFacilities, userLat, userLng)
+      .slice(0, limit)
+      .map(({ distance: _d, ...f }) => f);
   }
 
-  // Default: return first 3 emergency facilities alphabetically
   return emergencyFacilities
     .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 3);
+    .slice(0, limit);
 }
 
-/**
- * Format distance for display (rounds to 1 decimal)
- */
 export function formatDistance(km: number): string {
   if (km < 0.1) return "< 0.1";
   return km.toFixed(1);
+}
+
+export function filterFacilities(options: {
+  search?: string;
+  emergencyOnly?: boolean;
+}): Facility[] {
+  let results = getAllFacilities();
+
+  if (options.emergencyOnly) {
+    results = results.filter((f) => f.emergencyCapable);
+  }
+
+  if (options.search?.trim()) {
+    const q = options.search.toLowerCase();
+    results = results.filter(
+      (f) =>
+        f.name.toLowerCase().includes(q) ||
+        f.address.toLowerCase().includes(q) ||
+        f.specialties.some((s) => s.toLowerCase().includes(q))
+    );
+  }
+
+  return results;
 }

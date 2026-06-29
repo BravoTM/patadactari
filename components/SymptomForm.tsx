@@ -7,14 +7,20 @@ interface SymptomFormProps {
   language: Lang;
   onSubmit: (symptoms: string) => void;
   isLoading?: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
 export function SymptomForm({
   language,
   onSubmit,
   isLoading = false,
+  value: controlledValue,
+  onChange,
 }: SymptomFormProps) {
-  const [symptoms, setSymptoms] = useState("");
+  const [internalValue, setInternalValue] = useState("");
+  const symptoms = controlledValue !== undefined ? controlledValue : internalValue;
+  const setSymptoms = onChange ?? setInternalValue;
   const translations = t[language];
   const charCount = symptoms.length;
 

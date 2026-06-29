@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import {
   APIProvider,
   APILoadingStatus,
+  InfoWindow,
   Map,
   Marker,
   useApiLoadingStatus,
@@ -11,6 +12,7 @@ import {
 } from "@vis.gl/react-google-maps";
 import { Facility } from "@/lib/facilities";
 import {
+  getDirectionsUrl,
   getLevelColor,
   makeMarkerIcon,
   NAIROBI_CENTER,
@@ -25,6 +27,7 @@ interface GoogleMapCanvasProps {
   selectedFacility: FacilityWithDistance | null;
   userLocation?: { lat: number; lng: number };
   onSelectFacility: (facility: FacilityWithDistance) => void;
+  onDeselectFacility: () => void;
   language: "en" | "sw";
 }
 
@@ -71,7 +74,9 @@ function MapMarkers({
   selectedFacility,
   userLocation,
   onSelectFacility,
-}: Omit<GoogleMapCanvasProps, "language" | "apiKey">) {
+  onDeselectFacility,
+  language,
+}: Omit<GoogleMapCanvasProps, "apiKey">) {
   return (
     <>
       <FitMapBounds facilities={facilities} userLocation={userLocation} />
@@ -101,6 +106,37 @@ function MapMarkers({
           />
         );
       })}
+
+      {selectedFacility && (
+        <InfoWindow
+          position={{
+            lat: selectedFacility.latitude,
+            lng: selectedFacility.longitude,
+          }}
+          onCloseClick={onDeselectFacility}
+        >
+          <div className="p-1 max-w-[220px]">
+            <p className="font-bold text-gray-900 text-sm leading-tight mb-1">
+              {selectedFacility.name}
+            </p>
+            <p className="text-xs text-gray-600 mb-2">
+              {language === "en" ? "Level" : "Kiwango"} {selectedFacility.level}
+              {selectedFacility.emergencyCapable ? " · 24/7 ER" : ""}
+            </p>
+            <a
+              href={getDirectionsUrl(
+                selectedFacility.latitude,
+                selectedFacility.longitude
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-emerald-700 font-semibold hover:underline"
+            >
+              {language === "en" ? "Get directions →" : "Pata njia →"}
+            </a>
+          </div>
+        </InfoWindow>
+      )}
     </>
   );
 }
@@ -181,7 +217,7 @@ export default function GoogleMapCanvas({ apiKey, language, ...props }: GoogleMa
           streetViewControl={false}
           className="w-full h-full"
         >
-          <MapMarkers {...props} />
+          <MapMarkers {...props} language={language} />
         </Map>
       </div>
     </APIProvider>

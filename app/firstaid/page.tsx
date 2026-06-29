@@ -1,21 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FIRST_AID_GUIDES, getDiseasesFromSymptoms } from "@/lib/firstaid";
 import { isEmergency } from "@/lib/emergency";
 import { useLanguage } from "@/components/LanguageProvider";
+import { AppNav } from "@/components/AppNav";
 import FirstAidGuideComponent from "@/components/FirstAidGuideComponent";
-import { Heart, ArrowLeft, Search, AlertCircle, Stethoscope } from "lucide-react";
-import Link from "next/link";
+import { ArrowLeft, Search, AlertCircle, Stethoscope } from "lucide-react";
 
-export default function FirstAidPage() {
+function FirstAidContent() {
   const { language } = useLanguage();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGuide, setSelectedGuide] = useState<string | null>(null);
   const [symptomInput, setSymptomInput] = useState("");
   const [showDiseases, setShowDiseases] = useState(false);
+
+  useEffect(() => {
+    const guideId = searchParams.get("guide");
+    if (guideId && FIRST_AID_GUIDES.some((g) => g.id === guideId)) {
+      setSelectedGuide(guideId);
+    }
+  }, [searchParams]);
 
   const guides = FIRST_AID_GUIDES;
   const filteredGuides = searchQuery.trim() === "" 
@@ -44,36 +52,21 @@ export default function FirstAidPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-white">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 sm:p-6 shadow-lg sticky top-0 z-10">
+      <AppNav />
+
+      <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-6">
         <div className="max-w-6xl mx-auto">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
-          >
-            <ArrowLeft size={20} />
-            <span>{language === "en" ? "Back to Home" : "Rudi Nyumbani"}</span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <Heart size={24} fill="white" />
-            </div>
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold">
-                {language === "en" ? "First Aid Guide" : "Mwongozo wa Msaada wa Kwanza"}
-              </h1>
-              <p className="text-red-100 text-sm">
-                {language === "en"
-                  ? "Emergency procedures and health information"
-                  : "Utaratibu wa dharura na taarifa za afya"}
-              </p>
-            </div>
-          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold">
+            {language === "en" ? "First Aid Guide" : "Mwongozo wa Msaada wa Kwanza"}
+          </h1>
+          <p className="text-red-100 text-sm mt-1">
+            {language === "en"
+              ? "Emergency procedures and health information"
+              : "Utaratibu wa dharura na taarifa za afya"}
+          </p>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
       <main className="max-w-6xl mx-auto p-4 sm:p-6">
         {!selectedGuideData ? (
           <>
@@ -317,7 +310,10 @@ export default function FirstAidPage() {
         ) : (
           <div>
             <button
-              onClick={() => setSelectedGuide(null)}
+              onClick={() => {
+                setSelectedGuide(null);
+                router.replace("/firstaid");
+              }}
               className="mb-6 inline-flex items-center gap-2 bg-white px-4 py-2 rounded-lg border-2 border-gray-300 hover:border-gray-400 font-semibold text-gray-700 transition"
             >
               <ArrowLeft size={18} />
@@ -346,5 +342,13 @@ export default function FirstAidPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function FirstAidPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-orange-50" />}>
+      <FirstAidContent />
+    </Suspense>
   );
 }

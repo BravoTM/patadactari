@@ -1,32 +1,53 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Facility, haversineDistance } from "@/lib/facilities";
-import { getDirectionsUrl } from "@/lib/mapUtils";
+import { useEffect, useMemo, useState } from "react";
+import { Facility, getAllFacilities, getFacilityById, haversineDistance } from "@/lib/facilities";
 import GoogleMapCanvas from "@/components/GoogleMapCanvas";
-import facilitiesData from "@/data/facilities.json";
-import { MapPin, Phone, Clock, AlertCircle, Search, Filter, Navigation, ExternalLink } from "lucide-react";
+import { FacilityCard } from "@/components/FacilityCard";
+import { MapPin, Search, Filter } from "lucide-react";
 
 interface HospitalMapProps {
   language: "en" | "sw";
   userLocation?: { lat: number; lng: number };
   googleMapsApiKey: string;
+  highlightFacilityId?: string | null;
 }
 
-type FacilityWithDistance = Facility & { distance?: number; specialties?: string[] };
+type FacilityWithDistance = Facility & { distance?: number };
 
-function getLevelLabel(level: number, language: "en" | "sw"): string {
-  return `${language === "en" ? "Level" : "Kiwango"} ${level}`;
-}
-
-export default function HospitalMap({ language, userLocation, googleMapsApiKey }: HospitalMapProps) {
+export default function HospitalMap({
+  language,
+  userLocation,
+  googleMapsApiKey,
+  highlightFacilityId,
+}: HospitalMapProps) {
   const [selectedFacility, setSelectedFacility] = useState<FacilityWithDistance | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterEmergency, setFilterEmergency] = useState(false);
   const [hoveredMarker, setHoveredMarker] = useState<string | null>(null);
 
-  const facilitiesWithDistance = useMemo(() => {
-    const facilities = facilitiesData as FacilityWithDistance[];
+  useEffect(() => {
+    if (!highlightFacilityId) return;
+    const facility = getFacilityById(highlightFacilityId);
+    if (facility) {
+      setSelectedFacility(
+        userLocation
+          ? {
+              ...facility,
+              distance: haversineDistance(
+                userLocation.lat,
+                userLocation.lng,
+                facility.latitude,
+                facility.longitude
+              ),
+            }
+          : facility
+      );
+    }
+  }, [highlightFacilityId, userLocation]);
+
+  const facilitiesWithDistance = useMemo((): FacilityWithDistance[] => {
+    const facilities = getAllFacilities();
     if (!userLocation) return facilities;
 
     return facilities
@@ -55,7 +76,7 @@ export default function HospitalMap({ language, userLocation, googleMapsApiKey }
         (f) =>
           f.name.toLowerCase().includes(query) ||
           f.address.toLowerCase().includes(query) ||
-          f.specialties?.some((s) => s.toLowerCase().includes(query))
+          f.specialties.some((s) => s.toLowerCase().includes(query))
       );
     }
 
@@ -122,6 +143,7 @@ export default function HospitalMap({ language, userLocation, googleMapsApiKey }
             selectedFacility={selectedFacility}
             userLocation={userLocation}
             onSelectFacility={handleSelectFacility}
+            onDeselectFacility={() => setSelectedFacility(null)}
             language={language}
           />
         </div>
@@ -188,143 +210,28 @@ export default function HospitalMap({ language, userLocation, googleMapsApiKey }
             </p>
           </div>
         ) : (
-          <div className="space-y-2 max-h-96 overflow-y-auto p-4 sm:p-6">
+          <div className="space-y-3 max-h-[32rem] overflow-y-auto p-4 sm:p-6">
             {filteredFacilities.map((facility) => (
-              <button
+              <div
                 key={facility.id}
-                type="button"
-                onClick={() => handleSelectFacility(facility)}
                 onMouseEnter={() => setHoveredMarker(facility.id)}
                 onMouseLeave={() => setHoveredMarker(null)}
-                className={`w-full text-left p-4 rounded-xl transition-all duration-200 border-2 ${
-                  selectedFacility?.id === facility.id
-                    ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-500 shadow-md"
-                    : hoveredMarker === facility.id
-                    ? "bg-gray-50 border-gray-300 shadow-sm"
-                    : "bg-white border-gray-200 hover:border-gray-300"
-                }`}
+                onClick={() => handleSelectFacility(facility)}
+                className="cursor-pointer"
               >
-                <div className="font-semibold text-gray-900">{facility.name}</div>
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className="text-xs font-bold px-2 py-1 bg-gray-100 rounded-full">
-                    {facility.emergencyCapable ? "🚑" : "🏥"}{" "}
-                    {getLevelLabel(facility.level, language)}
-                  </span>
-                  {facility.distance !== undefined && (
-                    <span className="text-xs font-semibold text-emerald-600">
-                      {facility.distance < 1
-                        ? "< 1 km"
-                        : `${facility.distance.toFixed(1)} km`}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mt-2 line-clamp-1">{facility.address}</p>
-              </button>
+                <FacilityCard
+                  facility={facility}
+                  distance={facility.distance}
+                  language={language}
+                  highlighted={
+                    selectedFacility?.id === facility.id || hoveredMarker === facility.id
+                  }
+                />
+              </div>
             ))}
           </div>
         )}
       </div>
-
-      {selectedFacility && (
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 sm:p-6 border-2 border-emerald-400 shadow-xl">
-          <div className="mb-4">
-            <h3 className="font-bold text-lg text-gray-900">{selectedFacility.name}</h3>
-            <p className="text-sm text-emerald-600 font-semibold mt-1">
-              {selectedFacility.emergencyCapable ? "🚑" : "🏥"}{" "}
-              {getLevelLabel(selectedFacility.level, language)}
-            </p>
-          </div>
-
-          <div className="space-y-3 text-sm mb-5">
-            <div className="flex items-start gap-3 bg-white/70 p-3 rounded-lg">
-              <MapPin size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-semibold text-gray-800">
-                  {language === "en" ? "Address" : "Anwani"}
-                </div>
-                <div className="text-gray-700 text-sm">{selectedFacility.address}</div>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 bg-white/70 p-3 rounded-lg">
-              <Phone size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-semibold text-gray-800">
-                  {language === "en" ? "Phone" : "Simu"}
-                </div>
-                <a
-                  href={`tel:${selectedFacility.phone}`}
-                  className="text-emerald-600 hover:text-emerald-700 font-semibold hover:underline"
-                >
-                  {selectedFacility.phone}
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 bg-white/70 p-3 rounded-lg">
-              <Clock size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-semibold text-gray-800">
-                  {language === "en" ? "Operating Hours" : "Saa za Kufungua"}
-                </div>
-                <div className="text-gray-700 text-sm font-medium">{selectedFacility.hours}</div>
-              </div>
-            </div>
-
-            {selectedFacility.distance !== undefined && (
-              <div className="flex items-start gap-3 bg-white/70 p-3 rounded-lg">
-                <Navigation size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-semibold text-gray-800">
-                    {language === "en" ? "Distance from You" : "Umbali Kutoka Kwako"}
-                  </div>
-                  <div className="text-gray-700 text-sm font-medium">
-                    {selectedFacility.distance < 1
-                      ? "< 1 km away"
-                      : `${selectedFacility.distance.toFixed(1)} km away`}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {selectedFacility.specialties && (
-              <div className="flex items-start gap-3 bg-white/70 p-3 rounded-lg">
-                <AlertCircle size={18} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-semibold text-gray-800">
-                    {language === "en" ? "Services" : "Huduma"}
-                  </div>
-                  <div className="text-gray-700 text-sm">
-                    {selectedFacility.specialties.join(", ")}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a
-              href={`tel:${selectedFacility.phone}`}
-              className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 text-center flex items-center justify-center gap-2 shadow-lg"
-            >
-              <Phone size={18} />
-              {language === "en" ? "Call Hospital" : "Piga Simu"}
-            </a>
-            <a
-              href={getDirectionsUrl(
-                selectedFacility.latitude,
-                selectedFacility.longitude
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 py-3 px-4 rounded-lg font-semibold transition-all duration-200 text-center flex items-center justify-center gap-2"
-            >
-              <ExternalLink size={18} />
-              {language === "en" ? "Get Directions" : "Pata Njia"}
-            </a>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
