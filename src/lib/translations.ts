@@ -40,13 +40,15 @@ export const translations = {
 
     // Chat
     chatSubtitle: "Grounded in MoH Kenya Guidelines · Not a doctor",
-    chatWelcome: "Habari! I'm PataDaktari. Describe your symptoms in English or Swahili and I'll give you guidance based on Kenya MoH guidelines.\n\nI cover: malaria suspicion, respiratory infections, diarrheal diseases and basic first aid.\n\nWhat are you feeling today?",
+    chatWelcome: "Hello! I'm PataDaktari. Describe your symptoms and I'll give you guidance based on Kenya MoH guidelines.\n\nI cover: malaria suspicion, respiratory infections, diarrheal diseases and basic first aid.\n\nWhat are you feeling today?",
     chatPlaceholder: "Describe your symptoms...",
     chatEmergency: "Life-threatening emergency? Call",
     chatEmergencyNow: "immediately.",
     chatCall: "Call 999",
     chatError: "Could not connect. Please check your internet and try again.",
     chatGenericError: "Something went wrong. Please try again.",
+    chatFirstAidRedirect: "For step-by-step first aid instructions, I'm opening our First Aid Guide now.",
+    chatFirstAidRedirectGuide: "I found a guide that may help. Opening the First Aid Guide now.",
 
     // Emergency screen
     emergencyTitle: "This sounds like an emergency",
@@ -155,13 +157,15 @@ export const translations = {
 
     // Chat
     chatSubtitle: "Imejengwa kwenye Mwongozo wa MoH Kenya · Si daktari",
-    chatWelcome: "Habari! Mimi ni PataDaktari. Elezea dalili zako kwa Kiingereza au Kiswahili nami nitakupa mwongozo kulingana na miongozo ya MoH Kenya.\n\nNinashughulikia: wasiwasi wa malaria, maambukizi ya kupumua, magonjwa ya kuhara na msaada wa kwanza.\n\nUnajisikiaje leo?",
+    chatWelcome: "Habari! Mimi ni PataDaktari. Elezea dalili zako nami nitakupa mwongozo kulingana na miongozo ya MoH Kenya.\n\nNinashughulikia: wasiwasi wa malaria, maambukizi ya kupumua, magonjwa ya kuhara na msaada wa kwanza.\n\nUnajisikiaje leo?",
     chatPlaceholder: "Elezea dalili zako...",
     chatEmergency: "Dharura inayohatarisha maisha? Piga",
     chatEmergencyNow: "mara moja.",
     chatCall: "Piga 999",
     chatError: "Imeshindwa kuunganika. Tafadhali angalia mtandao wako na ujaribu tena.",
     chatGenericError: "Kuna tatizo. Tafadhali jaribu tena.",
+    chatFirstAidRedirect: "Kwa maelekezo ya msaada wa kwanza hatua kwa hatua, nafungua Mwongozo wa Msaada wa Kwanza sasa.",
+    chatFirstAidRedirectGuide: "Nimepata mwongozo unaoweza kusaidia. Nafungua Mwongozo wa Msaada wa Kwanza sasa.",
 
     // Emergency screen
     emergencyTitle: "Hii inaonekana kama dharura",

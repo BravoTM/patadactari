@@ -7,8 +7,21 @@ import { readFileSync } from "fs";
 import path from "path";
 import { PDFParse } from "pdf-parse";
 import { getGeminiApiKey, getTriageApiKey, isValidApiKey } from "@/lib/env.server";
+import {
+  detectMessageLanguage,
+  ensureDisclaimer,
+  type MessageLanguage,
+} from "@/lib/language";
 
-const SYSTEM_PROMPT = `You are PataDaktari, a health triage assistant built specifically for Nairobi residents.
+function buildSystemPrompt(lang: MessageLanguage): string {
+  const languageRule =
+    lang === "sw"
+      ? `- LAZIMA ujibu kwa Kiswahili pekee. Usitumie Kiingereza popote kwenye jibu lako.
+- Malizia kila jibu kwa: "Kumbuka: Tafuta ushauri wa daktari halisi."`
+      : `- You MUST reply in English only. Do not use Swahili anywhere in your response.
+- End every response with: "Remember: Always seek advice from a real doctor."`;
+
+  return `You are PataDaktari, a health triage assistant built specifically for Nairobi residents.
 
 You ONLY handle these 4 conditions:
 1. Malaria Suspicion
@@ -20,9 +33,9 @@ Your rules:
 - You NEVER diagnose. You NEVER prescribe medication.
 - You give triage advice only — what to do next and where to go.
 - If symptoms are outside your 4 conditions, say so clearly and tell them to visit a doctor.
-- Always end every response with: "Kumbuka: Tafuta ushauri wa daktari halisi. / Remember: Always seek advice from a real doctor."
-- Respond in the same language the user writes in.
+${languageRule}
 - Be clear, simple and easy to understand. Avoid complex medical terms.`;
+}
 
 const OPENAI_MODELS = ["gpt-4o-mini", "gpt-4o"] as const;
 const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"] as const;
@@ -102,8 +115,8 @@ async function getSimilarChunks(
   }
 }
 
-async function invokeOpenAI(apiKey: string, userPrompt: string): Promise<string> {
-  const messages = [new SystemMessage(SYSTEM_PROMPT), new HumanMessage(userPrompt)];
+async function invokeOpenAI(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {
+  const messages = [new SystemMessage(systemPrompt), new HumanMessage(userPrompt)];
 
   let lastError: unknown;
   for (const model of OPENAI_MODELS) {
@@ -121,8 +134,8 @@ async function invokeOpenAI(apiKey: string, userPrompt: string): Promise<string>
   throw lastError ?? new Error("All OpenAI models failed");
 }
 
-async function invokeGemini(apiKey: string, userPrompt: string): Promise<string> {
-  const messages = [new SystemMessage(SYSTEM_PROMPT), new HumanMessage(userPrompt)];
+async function invokeGemini(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {
+  const messages = [new SystemMessage(systemPrompt), new HumanMessage(userPrompt)];
 
   let lastError: unknown;
   for (const model of GEMINI_MODELS) {
@@ -150,6 +163,9 @@ export async function getTriage(userMessage: string): Promise<string> {
     throw new Error("No AI API key configured (set OPENAI_API_KEY or GEMINI_API_KEY)");
   }
 
+  const lang = detectMessageLanguage(userMessage);
+  const systemPrompt = buildSystemPrompt(lang);
+
   let context = "";
 
   try {
@@ -163,19 +179,26 @@ export async function getTriage(userMessage: string): Promise<string> {
     ? `Context from Kenya MoH Clinical Guidelines:\n${context}\n\nPatient describes: ${userMessage}`
     : `Patient describes: ${userMessage}`;
 
+  let response: string;
   try {
     if (auth.provider === "openai") {
-      return await invokeOpenAI(auth.key, userPrompt);
+      response = await invokeOpenAI(auth.key, systemPrompt, userPrompt);
+    } else {
+      response = await invokeGemini(auth.key, systemPrompt, userPrompt);
     }
-    return await invokeGemini(auth.key, userPrompt);
   } catch (primaryError) {
     if (auth.provider === "openai") {
       const geminiKey = getGeminiApiKey();
       if (isValidApiKey(geminiKey)) {
         console.warn("OpenAI failed; trying Gemini fallback.");
-        return invokeGemini(geminiKey, userPrompt);
+        response = await invokeGemini(geminiKey, systemPrompt, userPrompt);
+      } else {
+        throw primaryError;
       }
+    } else {
+      throw primaryError;
     }
-    throw primaryError;
   }
+
+  return ensureDisclaimer(response, lang);
 }

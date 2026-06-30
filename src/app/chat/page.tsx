@@ -2,9 +2,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useLang } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
+import { isEmergency } from "@/lib/emergency";
+import { getFirstAidRedirect, getFirstAidHref, getFirstAidRedirectMessage } from "@/lib/firstAidRouting";
 import EmergencyScreen from "@/components/EmergencyScreen";
 
 type Message = { role: "bot" | "user"; text: string };
+
+function goToFirstAid(href: string) {
+  window.location.assign(href);
+}
 
 export default function ChatPage() {
   const { lang } = useLang();
@@ -19,6 +25,18 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  useEffect(() => {
+    setMessages([{ role: "bot", text: t.chatWelcome }]);
+    setEmergency(false);
+  }, [lang, t.chatWelcome]);
+
+  function handleFirstAidRedirect(text: string, guideId?: string, response?: string) {
+    const href = getFirstAidHref(guideId);
+    const botText = response ?? getFirstAidRedirectMessage(lang, guideId);
+    setMessages((prev) => [...prev, { role: "bot", text: botText }]);
+    goToFirstAid(href);
+  }
+
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
@@ -27,15 +45,34 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
+      if (isEmergency(text)) {
+        setEmergency(true);
+        return;
+      }
+
+      const firstAid = getFirstAidRedirect(text);
+      if (firstAid) {
+        handleFirstAidRedirect(text, firstAid.guideId);
+        return;
+      }
+
       const res = await fetch("/api/triage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
       });
-      const data = await res.json();
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data) {
+        setMessages((prev) => [...prev, { role: "bot", text: t.chatError }]);
+        return;
+      }
+
       if (data.type === "emergency") {
         setEmergency(true);
-      } else if (data.type === "triage") {
+      } else if (data.type === "firstaid" || data.href) {
+        handleFirstAidRedirect(text, data.guideId ?? undefined, data.response);
+      } else if (data.type === "triage" && data.response) {
         setMessages((prev) => [...prev, { role: "bot", text: data.response }]);
       } else {
         setMessages((prev) => [...prev, { role: "bot", text: t.chatGenericError }]);

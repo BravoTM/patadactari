@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isEmergency } from "@/lib/emergency";
+import { getFirstAidRedirect, getFirstAidHref, getFirstAidRedirectMessage } from "@/lib/firstAidRouting";
+import { detectMessageLanguage } from "@/lib/language";
 import { getTriageApiKey } from "@/lib/env.server";
 import { getTriage } from "@/lib/rag";
 
@@ -59,6 +61,18 @@ export async function POST(req: NextRequest) {
 
     if (isEmergency(message)) {
       return NextResponse.json({ type: "emergency" });
+    }
+
+    const firstAid = getFirstAidRedirect(message);
+    if (firstAid) {
+      const lang = detectMessageLanguage(message);
+      const guideId = firstAid.guideId ?? undefined;
+      return NextResponse.json({
+        type: "firstaid",
+        guideId: guideId ?? null,
+        href: getFirstAidHref(guideId),
+        response: getFirstAidRedirectMessage(lang, guideId),
+      });
     }
 
     const auth = getTriageApiKey();

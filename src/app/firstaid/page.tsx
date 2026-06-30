@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLang } from "@/lib/LanguageContext";
 import { translations } from "@/lib/translations";
 import {
@@ -48,6 +49,15 @@ function GuideCard({
 }
 
 export default function FirstAidPage() {
+  return (
+    <Suspense>
+      <FirstAidPageContent />
+    </Suspense>
+  );
+}
+
+function FirstAidPageContent() {
+  const searchParams = useSearchParams();
   const { lang } = useLang();
   const t = translations[lang];
   const [search, setSearch] = useState("");
@@ -55,6 +65,13 @@ export default function FirstAidPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<FirstAidCategoryId | "all">("all");
   const [emergency, setEmergency] = useState(false);
+
+  useEffect(() => {
+    const guideId = searchParams.get("guide");
+    if (guideId && getFirstAidGuide(guideId)) {
+      setSelectedId(guideId);
+    }
+  }, [searchParams]);
 
   const searched = search.trim() ? searchFirstAidGuides(search) : FIRST_AID_GUIDES;
   const guides =
